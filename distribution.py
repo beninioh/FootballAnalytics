@@ -33,9 +33,6 @@ def poisson_chances(xg_home: float, xg_away: float, n: int = 15, plot: bool = Fa
     return win_home, draft, win_away
 
 
-# poisson_chances(1.53, 2.37, plot=True)
-
-
 def get_std(array: List):
     """
     From an array corresponding to likelihoods, return the standard deviation based on the computation of the sum
@@ -88,13 +85,13 @@ def normal_chances(xg_home: List[float], xg_away: List[float], n: int = 15, plot
     return win_home, draft, win_away
 
 
-xg_home = [0.02, 0.02, 0.03, 0.04, 0.04, 0.05, 0.06, 0.07, 0.09, 0.1, 0.12, 0.13, 0.76]
-xg_away = [0.01, 0.02, 0.02, 0.02, 0.03, 0.05, 0.05, 0.05, 0.06, 0.22, 0.30, 0.43, 0.48, 0.63]
+# xg_home = [0.02, 0.02, 0.03, 0.04, 0.04, 0.05, 0.06, 0.07, 0.09, 0.1, 0.12, 0.13, 0.76]
+# xg_away = [0.01, 0.02, 0.02, 0.02, 0.03, 0.05, 0.05, 0.05, 0.06, 0.22, 0.30, 0.43, 0.48, 0.63]
 
 # xg_home = [1/2] * 4
 # xg_away = [1/6] * 12
 
-poisson_chances(sum(xg_home), sum(xg_away), plot=True)
-normal_chances(xg_home, xg_away, plot=True)
+# poisson_chances(sum(xg_home), sum(xg_away), plot=True)
+# normal_chances(xg_home, xg_away, plot=True)
 
 
