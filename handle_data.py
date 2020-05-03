@@ -28,18 +28,20 @@ def mean(df):
 
 
 df = pd.read_csv('premier_league/stats.csv')
-df = add_points_and_ranking(df)
-df.to_csv('stats_with_ranking.csv')
-df = df.reset_index('season', drop=True)
+# df = df.query("season in ['2013-2014', '2014-2015', '2015-2016', '2016-2017', '2017-2018']")
 
-breakpoint()
+df = add_points_and_ranking(df)
+# df.to_csv('stats_with_ranking.csv')
+
+df = df.reset_index('season', drop=True)
 df_correlation = df.groupby('season').apply(correlation)
-df.to_csv('seasons_correlation.csv')
+# df_correlation.to_csv('seasons_correlation.csv')
+
 df_correlation = df_correlation.mean().sort_values(ascending=False)
-df.to_csv('total_correlation.csv')
+# df_correlation.to_csv('total_correlation.csv')
 
 df_ranking_mean = df.groupby('ranking').apply(mean)
-df.to_csv('ranking_mean.csv')
+# df_ranking_mean.to_csv('ranking_mean.csv')
 breakpoint()
 
 
