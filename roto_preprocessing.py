@@ -1,4 +1,4 @@
-from constants import ATTR_MEANING
+from constants import ATTR_MEANING, LIGUE1_TEAMS
 from typing import List
 import pandas as pd
 import glob
@@ -51,25 +51,28 @@ def players_dir2csv(files_dir: List[str], final_csv: str, season: str):
     df.to_csv(final_csv)
 
 
-def players2games(files_dir: List[str]):
+def players2games(files_dir: List[str], final_csv: str):
     files = get_files(files_dir)
+    a = 0
 
     weeks = []
     for i in range(1, len(files) + 1):
         week = pd.read_csv(files[i]).rename(columns=ATTR_MEANING)
+        week['team'] = week.team.apply(lambda x: LIGUE1_TEAMS[x])
+        week['opponent'] = week.opponent.apply(lambda x: LIGUE1_TEAMS[x])
 
         def get_game(df_team):
-            df_opp = week.query(f"team == '{df_team.opponent.values[0]}'")
-
-            sum_team = df_team.sum()
-            sum_opp = df_opp.sum()
+            df_opp = week.query(f"team == '{df_team.opponent.values[0]}' and opponent == '{df_team.team.values[0]}'")
 
             if df_team.home_away.values[0] == 'H':
                 df_home, df_away = df_team, df_opp
             elif df_team.home_away.values[0] == 'A':
                 df_home, df_away = df_opp, df_team
             else:
-                raise ValueError("A team cannot play neither home or away")
+                raise ValueError("A team cannot play neither at home and away")
+
+            id_nb = pd.DataFrame({'id_home': [f'{i}_{df_home.team.values[0]}'],
+                                  'id_away': [f'{i}_{df_away.team.values[0]}']})
 
             game_info = pd.DataFrame({'home': df_home.team.unique(),
                                       'away': df_away.team.unique(),
@@ -84,24 +87,45 @@ def players2games(files_dir: List[str]):
             df_home.rename(columns={x: 'h_' + x for x in df_home.keys()}, inplace=True)
             df_away.rename(columns={x: 'a_' + x for x in df_away.keys()}, inplace=True)
 
-            game = pd.concat([game_info,
+            game = pd.concat([id_nb,
+                              game_info,
                               df_home.sum().to_frame().transpose(),
                               df_away.sum().to_frame().transpose()],
                              axis=1, sort=False)
 
             return game
 
-        games = week.groupby('team').apply(get_game).reset_index(drop=True)
+        games = week.groupby(['team', 'opponent']).apply(get_game).\
+            reset_index(drop=True).\
+            drop_duplicates().\
+            reset_index(drop=True)
+
         games['week'] = [i] * len(games)
+
+        if i == 21:
+            games.loc[1, 'id_home'] = '16_amiens'
+            games.loc[1, 'id_away'] = '16_reims'
+            games.loc[1, 'week'] = '16'
+            games.loc[8, 'id_home'] = '15_monaco'
+            games.loc[8, 'id_away'] = '15_paris'
+            games.loc[8, 'week'] = '15'
+            games.loc[11, 'id_home'] = '12_nimes'
+            games.loc[11, 'id_away'] = '12_rennes'
+            games.loc[11, 'week'] = '12'
 
         weeks.append(games)
 
-    df_games = pd.concat(weeks, ignore_index=True, sort=False).drop_duplicates()
-    df_games.to_csv('games_ligue1_1920.csv')
+    df_games = pd.concat(weeks, ignore_index=True, sort=False)
+    df_games.to_csv(final_csv)
+
+
+# t = pd.read_csv('test.csv')
+# print(t.Team.unique())
+# breakpoint()
 
 
 fil_dir = glob.glob('rotowire/ligue1/players/1920/*.csv')
-players2games(fil_dir)
+players2games(fil_dir, 'games_ligue1_1920.csv')
 
 # players_dir2csv(fil_dir, 'players_ligue1_1920.csv', '1920')
 
