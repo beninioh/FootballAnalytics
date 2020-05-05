@@ -24,3 +24,10 @@ ATTR_MEANING = {'GP': 'games_played', 'ST': 'starts', 'ON': 'sub_on', 'OFF': 'su
                 'OPP': 'opponent', 'H/A': 'home_away', 'Form': 'formation', 'Player Name': 'player_name',
                 'POS': 'position'}
 
+LIGUE_TO_ADD = ['lorient', 'troyes', 'nancy', 'sc_bastia', 'gazelec_ajaccio']
+
+LIGUE1_TEAMS = {'DIJ': 'dijon', 'FCN': 'nantes', 'ASM': 'monaco', 'MTP': 'montpellier', 'GUI': 'guingamp',
+                'ETI': 'st_etienne', 'TFC': 'toulouse', 'PSG': 'paris', 'SMC': 'caen', 'FCM': 'metz',
+                'STR': 'strasbourg', 'OL': 'lyon', 'NO': 'nimes', 'NIC': 'nice', 'GDB': 'bordeaux', 'SCO': 'angers',
+                'LIL': 'lille', 'BRE': 'brest', 'ASC': 'amiens', 'OM': 'marseille', 'REN': 'rennes', 'SDR': 'reims'}
+
