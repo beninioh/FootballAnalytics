@@ -51,7 +51,9 @@ def players_dir2csv(files_dir: List[str], final_csv: str, season: str):
     df.to_csv(final_csv)
 
 
-def players2games(files_dir: List[str], final_csv: str):
+def players2games(league: str, season: str):
+    from fix_postponed import fix_postponed
+    files_dir = glob.glob(f'rotowire/{league}/players/{season}/*.csv')
     files = get_files(files_dir)
     a = 0
 
@@ -102,30 +104,20 @@ def players2games(files_dir: List[str], final_csv: str):
 
         games['week'] = [i] * len(games)
 
-        if i == 21:
-            games.loc[1, 'id_home'] = '16_amiens'
-            games.loc[1, 'id_away'] = '16_reims'
-            games.loc[1, 'week'] = '16'
-            games.loc[8, 'id_home'] = '15_monaco'
-            games.loc[8, 'id_away'] = '15_paris'
-            games.loc[8, 'week'] = '15'
-            games.loc[11, 'id_home'] = '12_nimes'
-            games.loc[11, 'id_away'] = '12_rennes'
-            games.loc[11, 'week'] = '12'
+        print(i, len(games))
+        a += len(games)
 
         weeks.append(games)
 
     df_games = pd.concat(weeks, ignore_index=True, sort=False)
-    df_games.to_csv(final_csv)
+    df_games = fix_postponed(df_games, league, season)
+    rs = df_games.groupby('week').apply(len)
+    breakpoint()
+    df_games.to_csv(f'games_{league}_{season}.csv')
 
 
-# t = pd.read_csv('test.csv')
-# print(t.Team.unique())
-# breakpoint()
-
-
-fil_dir = glob.glob('rotowire/ligue1/players/1920/*.csv')
-players2games(fil_dir, 'games_ligue1_1920.csv')
+# fil_dir = glob.glob('rotowire/ligue1/players/1718/*.csv')
+players2games('ligue1', '1819')
 
 # players_dir2csv(fil_dir, 'players_ligue1_1920.csv', '1920')
 
