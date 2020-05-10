@@ -1,4 +1,5 @@
 from constants import ATTR_MEANING, LIGUE1_TEAMS
+from utils.enrichment import games_new_attr, id_and_check
 from typing import List
 import pandas as pd
 import glob
@@ -18,7 +19,7 @@ def get_files(files_dir: List[str]):
     return files
 
 
-def players_dir2csv(files_dir: List[str], final_csv: str, season: str):
+def enrich_players(files_dir: List[str], final_csv: str, season: str):
     """
     This methods goes from a directory to a csv files that will be export.
     The directory should contains different stats per players among one season and as much csv as week played.
@@ -52,10 +53,22 @@ def players_dir2csv(files_dir: List[str], final_csv: str, season: str):
 
 
 def players2games(league: str, season: str):
-    from fix_postponed import fix_postponed
+    """
+    This methods goes from a directory to a csv files that will be export.
+    The directory should contains different stats per players among one season and as much csv as week played.
+    The csv' name should finish i.csv where i corresponds to week.
+    Moreover, since the attributes from rotowire are not explicit enough, we will use the dictionary ATTR_MEANING
+    to make them more readable.
+    The export csv represent all the games that has been happening during one season. Per games, different id are added,
+    every attributes starting with h_ (a_) represent the home (away) team.
+
+    :param league: str. League names ('ligue1', 'bundesliga', 'premiere_league' ...).
+    :param season: str. Wanted season ('1718', '1920' ...).
+    :return: None. However, export file with all the games for one season.
+    """
+    from utils.fix_postponed import fix_postponed
     files_dir = glob.glob(f'rotowire/{league}/players/{season}/*.csv')
     files = get_files(files_dir)
-    a = 0
 
     weeks = []
     for i in range(1, len(files) + 1):
@@ -104,20 +117,19 @@ def players2games(league: str, season: str):
 
         games['week'] = [i] * len(games)
 
-        print(i, len(games))
-        a += len(games)
-
         weeks.append(games)
 
     df_games = pd.concat(weeks, ignore_index=True, sort=False)
     df_games = fix_postponed(df_games, league, season)
-    rs = df_games.groupby('week').apply(len)
-    breakpoint()
-    df_games.to_csv(f'games_{league}_{season}.csv')
+    df_games = df_games.groupby('week').apply(id_and_check, df_games, set(df_games.home.values))
+    df_games = games_new_attr(df_games)
+    # breakpoint()
+    df_games.to_csv(f'rotowire/{league}/games/games_{league}_{season}.csv')
 
 
 # fil_dir = glob.glob('rotowire/ligue1/players/1718/*.csv')
-players2games('ligue1', '1819')
+for season in ['1617', '1718', '1819', '1920']:
+    players2games('ligue1', season)
 
 # players_dir2csv(fil_dir, 'players_ligue1_1920.csv', '1920')
 
