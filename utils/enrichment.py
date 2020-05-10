@@ -53,6 +53,8 @@ def games_new_attr(df):
     df['a_%_passes_through_balls'] = df.a_accurate_through_balls / df.a_passes * 100
     df['h_%_crosses_accurate'] = df.h_accurate_crosses / df.h_crosses * 100
     df['a_%_crosses_accurate'] = df.a_accurate_crosses / df.a_crosses * 100
+    df['h_%_touches_dribbles'] = df.h_dribbles / df.h_touches * 100
+    df['a_%_touches_dribbles'] = df.a_dribbles / df.a_touches * 100
     df['h_%_dribbles_accurate'] = df.h_attempted_dribbles / df.h_dribbles * 100
     df['a_%_dribbles_accurate'] = df.a_attempted_dribbles / df.a_dribbles * 100
     df['h_%_touches_dispossessed'] = df.h_dispossessed / df.h_touches * 100

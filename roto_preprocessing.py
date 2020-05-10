@@ -1,4 +1,4 @@
-from constants import ATTR_MEANING, LIGUE1_TEAMS
+from utils.constants import ATTR_MEANING, LIGUE1_TEAMS, GAMES_ATTRIB
 from utils.enrichment import games_new_attr, id_and_check
 from typing import List
 import pandas as pd
@@ -19,7 +19,7 @@ def get_files(files_dir: List[str]):
     return files
 
 
-def enrich_players(files_dir: List[str], final_csv: str, season: str):
+def enrich_players(league: str, season: str):
     """
     This methods goes from a directory to a csv files that will be export.
     The directory should contains different stats per players among one season and as much csv as week played.
@@ -28,28 +28,21 @@ def enrich_players(files_dir: List[str], final_csv: str, season: str):
     to make them more readable.
     Finally, the export csv is a concatenation of all the csv with new attributes names and the attribute 'week'.
 
-    :param files_dir: List[str]. Directory where to find the csv per week played.
-    :param final_csv: str. Name of the export csv.
+    :param league: str. League names ('ligue1', 'bundesliga', 'premiere_league' ...).
+    :param season: str. Wanted season ('1718', '1920' ...).
     :param season: str. Season where the data is from in order to add it as an attribute.
     :return: None. Will export the desired csv.
     """
+    files_dir = glob.glob(f'rotowire/{league}/players/{season}/*.csv')
     files = get_files(files_dir)
 
-    weeks = []
-    for i in range(1, len(files) + 1):
-        week = pd.read_csv(files[i]).rename(columns=ATTR_MEANING)
+    players = pd.concat([pd.read_csv(files[i]).rename(columns=ATTR_MEANING) for i in range(1, len(files) + 1)],
+                        ignore_index=True, sort=False)
 
-        try:
-            week['home_away']
-        except KeyError:
-            raise ValueError('File does not seems to be of a proper format.')
+    rs = players.groupby('player_name').sum()
+    breakpoint()
 
-        week['week'] = [i] * len(week)
-        weeks.append(week)
-
-    df = pd.concat(weeks, ignore_index=True, sort=False)
-    df['season'] = season
-    df.to_csv(final_csv)
+    # df.to_csv(f'rotowire/{league}/players/players_{league}_{season}.csv', index=False)
 
 
 def players2games(league: str, season: str):
@@ -73,6 +66,7 @@ def players2games(league: str, season: str):
     weeks = []
     for i in range(1, len(files) + 1):
         week = pd.read_csv(files[i]).rename(columns=ATTR_MEANING)
+        breakpoint()
         week['team'] = week.team.apply(lambda x: LIGUE1_TEAMS[x])
         week['opponent'] = week.opponent.apply(lambda x: LIGUE1_TEAMS[x])
 
@@ -123,19 +117,13 @@ def players2games(league: str, season: str):
     df_games = fix_postponed(df_games, league, season)
     df_games = df_games.groupby('week').apply(id_and_check, df_games, set(df_games.home.values))
     df_games = games_new_attr(df_games)
-    # breakpoint()
-    df_games.to_csv(f'rotowire/{league}/games/games_{league}_{season}.csv')
+    df_games = df_games.reindex(columns=GAMES_ATTRIB)
+    breakpoint()
+
+    df_games.to_csv(f'rotowire/{league}/games/games_{league}_{season}.csv', index=False)
 
 
-# fil_dir = glob.glob('rotowire/ligue1/players/1718/*.csv')
-for season in ['1617', '1718', '1819', '1920']:
-    players2games('ligue1', season)
+# players2games('ligue1', '1617')
 
-# players_dir2csv(fil_dir, 'players_ligue1_1920.csv', '1920')
+enrich_players('ligue1', '1617')
 
-# fil_dir = glob.glob('rotowire/ligue1/ranking/*.csv')
-# for file in fil_dir:
-#     df = pd.read_csv(file).rename(columns=ATTR_MEANING)
-#     df['season'] = int(str(file)[-8:-4])
-#     breakpoint()
-#     df.to_csv(file)
