@@ -1,5 +1,5 @@
 from utils.constants import ATTR_MEANING, LIGUE1_TEAMS, GAMES_ATTRIB
-from utils.enrichment import games_new_attr, id_and_check
+from utils.enrichment import games_new_attr, games_id_and_check
 from typing import List
 import pandas as pd
 import glob
@@ -33,14 +33,19 @@ def enrich_players(league: str, season: str):
     :param season: str. Season where the data is from in order to add it as an attribute.
     :return: None. Will export the desired csv.
     """
+    from utils.enrichment import players_id
+
     files_dir = glob.glob(f'rotowire/{league}/players/{season}/*.csv')
     files = get_files(files_dir)
 
     players = pd.concat([pd.read_csv(files[i]).rename(columns=ATTR_MEANING) for i in range(1, len(files) + 1)],
                         ignore_index=True, sort=False)
 
-    rs = players.groupby('player_name').sum()
-    breakpoint()
+    players.loc[:, 'team'] = players.team.apply(lambda x: LIGUE1_TEAMS[x])
+    players.loc[:, 'opponent'] = players.opponent.apply(lambda x: LIGUE1_TEAMS[x])
+
+    players = players_id(players, league, season)
+
 
     # df.to_csv(f'rotowire/{league}/players/players_{league}_{season}.csv', index=False)
 
@@ -115,7 +120,7 @@ def players2games(league: str, season: str):
 
     df_games = pd.concat(weeks, ignore_index=True, sort=False)
     df_games = fix_postponed(df_games, league, season)
-    df_games = df_games.groupby('week').apply(id_and_check, df_games, set(df_games.home.values))
+    df_games = df_games.groupby('week').apply(games_id_and_check, df_games, set(df_games.home.values))
     df_games = games_new_attr(df_games)
     df_games = df_games.reindex(columns=GAMES_ATTRIB)
     breakpoint()
@@ -125,5 +130,5 @@ def players2games(league: str, season: str):
 
 # players2games('ligue1', '1617')
 
-enrich_players('ligue1', '1617')
+enrich_players('ligue1', '1718')
 
