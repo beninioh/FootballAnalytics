@@ -24,16 +24,22 @@ ATTR_MEANING = {'GP': 'games_played', 'ST': 'starts', 'ON': 'sub_on', 'OFF': 'su
                 'OPP': 'opponent', 'H/A': 'home_away', 'Form': 'formation', 'Player Name': 'player_name',
                 'POS': 'position'}
 
-LIGUE_TO_ADD = ['gazelec_ajaccio']
-
 LIGUE1_TEAMS = {'DIJ': 'Dijon', 'FCN': 'Nantes', 'ASM': 'Monaco', 'MTP': 'Montpellier', 'GUI': 'Guingamp',
                 'ETI': 'St_etienne', 'TFC': 'Toulouse', 'PSG': 'Paris', 'SMC': 'Caen', 'FCM': 'Metz',
                 'STR': 'Strasbourg', 'OL': 'Lyon', 'NO': 'Nimes', 'NIC': 'Nice', 'GDB': 'Bordeaux', 'SCO': 'Angers',
                 'LIL': 'Lille', 'BRE': 'Brest', 'ASC': 'Amiens', 'OM': 'Marseille', 'REN': 'Rennes', 'SDR': 'Reims',
                 'TRO': 'Troyes', 'BST': 'Bastia', 'FCL': 'Lorient', 'NAN': 'Nancy'}
 
+PRLEAGUE_TEAMS = {'BUR': 'Burnley', 'BOU': 'Bornemouth', 'CRY': 'Crystal_palace', 'NOR': 'Norwich', 'WHU': 'West_ham',
+                  'AVL': 'Aston_villa',  'WAT': 'Watford', 'LEI': 'Leicester', 'WLV': 'Wolverhampthon', 'TOT': 'Tottenham',
+                  'NEW': 'Newcastle', 'MUN': 'Man_united', 'LIV': 'Liverpool', 'ARS': 'Arsenal', 'MCI': 'Man_city',
+                  'CHE': 'Chelsea', 'SHU': 'Sheffield_uni', 'SOU': ' Southampton', 'EVE': 'Everton', 'BHA': 'Brighton',
+                  'CAR': 'Cardiff', 'HUD': 'Huddersfield', 'FUL': 'Fullham', 'WBA': 'West_bromwich', 'STO': 'Stoke_city',
+                  'SWA': 'Swansea', 'MID': 'Middlesbrough', 'SUN': 'Sunderland', 'HUL': 'Hull_City'}
 
-GAMES_ATTRIB = ['id_home', 'id_away', 'nb_home', 'nb_away', 'home', 'away', 'week',
+TEAMS = {'ligue1': LIGUE1_TEAMS, 'prleague': PRLEAGUE_TEAMS}
+
+GAMES_ATTRIB = ['id_home', 'id_away', 'nb_home', 'nb_away', 'league', 'season', 'week' 'file', 'home', 'away',
                 
                 'h_formation',
                 'h_goals', 'h_goals_inside_box', 'h_%_goals_inside', 'h_goals_outside_box', 'h_%_goals_outside',
@@ -92,9 +98,9 @@ GAMES_ATTRIB = ['id_home', 'id_away', 'nb_home', 'nb_away', 'home', 'away', 'wee
                 'a_penalty_saves', 'a_corners', 'a_corner_crosses', 'a_corners_won']
 
 
-PLAYERS_ATTRIB = ['id_player', 'player_name', 'id_home', 'id_away', 'team', 'opponent', 'week',
-                
-                  'formation',
+PLAYERS_ATTRIB = ['id_player', 'id_home', 'id_away', 'nb_home', 'nb_away', 'league', 'season', 'week' 'file',
+                  'team', 'opponent', 'player_name', 'formation',
+
                   'goals', 'goals_inside_box', '%_goals_inside', 'goals_outside_box', '%_goals_outside',
                   'free_kick_goals', '%_goals_free_kick', 'shots', '%_goals_shot', 'shots_on_goal',
                   '%_goals_shot_on', '%_shot_shot_on', 'shots_inside_box', '%_goals_shot_inside',

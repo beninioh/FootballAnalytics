@@ -81,4 +81,46 @@ def fix_postponed(df, league: str, season: str):
         df = fix(df, 'St_etienne', 'Paris', 37)
         df = fix(df, 'Metz', 'Toulouse', 37)
 
+    if league == 'prleague' and season == '1617':
+        fix(df, 'Man_city', 'Man_united', 26)
+        fix(df, 'Southampton', 'Arsenal', 26)
+
+        fix(df, 'Middlesbrough', 'Sunderland', 28)
+        fix(df, 'Arsenal', 'Leicester', 28)
+        fix(df, 'Crystal_palace', 'Tottenham', 28)
+        fix(df, 'Chelsea', 'Watford', 28)
+        fix(df, 'Southampton', 'Man_united', 28)
+
+        fix(df, 'Arsenal', 'Sunderland', 34)
+        fix(df, 'Man_city', 'West_bromwich', 34)
+        fix(df, 'Chelsea', 'Southampton', 34)
+        fix(df, 'Leicester', 'Tottenham', 34)
+
+    if league == 'prleague' and season == '1718':
+        fix(df, 'Tottenham', 'West_ham', 21)
+        fix(df, 'Burnley', 'Chelsea', 31)
+        fix(df, 'Swansea', 'Southampton', 31)
+        fix(df, 'Leicester', 'Arsenal', 31)
+        fix(df, 'Tottenham', 'Newcastle', 31)
+        fix(df, 'Man_city', 'Brighton', 31)
+        fix(df, 'West_ham', 'Man_united', 31)
+        fix(df, 'Chelsea', 'Huddersfield', 35)
+
+    if league == 'prleague' and season == '1819':
+        fix(df, 'Everton', 'Man_city', 27)
+        fix(df, 'Chelsea', 'Brighton', 27)
+
+        fix(df, 'Man_united', 'Man_city', 31)
+        fix(df, 'Watford', 'Southampton', 31)
+        fix(df, 'Brighton', 'Cardiff', 31)
+        fix(df, 'Tottenham', 'Crystal_palace', 31)
+        fix(df, 'Wolverhampthon', 'Arsenal', 31)
+
+        fix(df, 'Tottenham', 'Brighton', 33)
+
+    if league == 'prleague' and season == '1920':
+        fix(df, 'West_ham', 'Liverpool', 18)
+        # fix(df, 'Man_city', 'Arsenal', 28)
+        # fix(df, 'Aston_villa', 'Sheffield_uni', 28)
+
     return df
