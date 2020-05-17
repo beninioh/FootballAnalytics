@@ -3,7 +3,7 @@ import pandas as pd
 
 
 def games_new_attr(df: pd.DataFrame):
-    df['h_%_goals_inside'] = df.h_goals_inside_box / df.h_goals 
+    df['h_%_goals_inside'] = df.h_goals_inside_box / df.h_goals
     df['a_%_goals_inside'] = df.a_goals_inside_box / df.a_goals 
     df['h_%_goals_outside'] = df.h_goals_outside_box / df.h_goals 
     df['a_%_goals_outside'] = df.a_goals_outside_box / df.a_goals 
@@ -100,7 +100,7 @@ def players_new_attr(df: pd.DataFrame):
     df['%_touches_dribbles'] = df.dribbles / df.touches 
     df['%_dribbles_accurate'] = df.attempted_dribbles / df.dribbles 
     df['%_touches_dispossessed'] = df.dispossessed / df.touches 
-    df['%_fouls_yellow_cards'] = df.yellow_cards / df.fouls_committed 
+    df['%_fouls_yellow_cards'] = df.yellow_cards / df.fouls_committed
 
     return df
 
@@ -109,10 +109,13 @@ def games_id_and_check(df: pd.DataFrame, df_games: pd.DataFrame, teams: pd.DataF
     if len(set(df.home.values)) != 10:
         print(df.week.values[0], teams - set(df.home.values).union(set(df.away.values)))
 
+    df.reset_index(0, inplace=True)
+
     h = [
         f"""h_{1 + len(df_games.iloc[:i].query(f"id_home.str.contains('{df_games.home.values[i]}')"))}_{df_games.home.values[i]}"""
         for i in list(df.index)
         ]
+
     a = [
         f"""a_{1 + len(df_games.iloc[:i].query(f"id_away.str.contains('{df_games.away.values[i]}')"))}_{df_games.away.values[i]}"""
         for i in list(df.index)
