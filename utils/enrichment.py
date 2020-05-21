@@ -134,18 +134,25 @@ def _add_games_id_for_players(df: pd.DataFrame, df_games: pd.DataFrame):
 
     game = df_games.query(
             f"id_home.str.contains('{df.team.values[0]}') and id_away.str.contains('{df.opponent.values[0]}')"
-    )
+                         )
 
     if game.empty:
         game = df_games.query(
             f"id_home.str.contains('{df.opponent.values[0]}') and id_away.str.contains('{df.team.values[0]}')"
-        )
+                             )
 
     for id_nb in ('id_home', 'id_away', 'nb_home', 'nb_away'):
         try:
             df[id_nb] = list(game.loc[:, id_nb].unique()) * len(df)
         except ValueError:
             breakpoint()
+
+    try:
+        week = int(df.id_home.values[0][:2])
+    except ValueError:
+        week = int(df.id_home.values[0][:1])
+
+    df['week'] = [week] * len(df)
 
     return df
 

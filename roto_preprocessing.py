@@ -155,7 +155,7 @@ def players2games(league: str, season: str):
     df_games = games_new_attr(df_games)
     df_games = df_games.reindex(columns=GAMES_ATTRIB)
 
-    breakpoint()
+    # breakpoint()
     df_games.to_csv(f'rotowire/{league}/games/games_{league}_{season}.csv', index=False)
 
 
@@ -194,15 +194,20 @@ def enrich_players(league: str, season: str):
     players.to_csv(f'rotowire/{league}/players/players_{league}_{season}.csv', index=False)
 
 
+def players_per_season(league: str, season: str):
+    df = pd.read_csv(f'rotowire/{league}/players/players_{league}_{season}.csv', index=False)
+
+
 # concat_csv(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
 # breakpoint()
 
-# for season in ['1920']:
-#     players2games('prleague', season)
+# for league in ['ligue1', 'prleague']:
+#     for season in ['1617', '1718', '1819', '1920']:
+#         players2games(league, season)
 # breakpoint()
 
-for season in ['1617', '1718', '1819', '1920']:
-    for league in ['ligue1', 'prleague']:
+for league in ['ligue1', 'prleague']:
+    for season in ['1617', '1718', '1819', '1920']:
         enrich_players(league, season)
 
 
