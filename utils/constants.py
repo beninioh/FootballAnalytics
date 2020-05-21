@@ -39,7 +39,7 @@ PRLEAGUE_TEAMS = {'BUR': 'Burnley', 'BOU': 'Bornemouth', 'CRY': 'Crystal_palace'
 
 TEAMS = {'ligue1': LIGUE1_TEAMS, 'prleague': PRLEAGUE_TEAMS}
 
-GAMES_ATTRIB = ['id_home', 'id_away', 'nb_home', 'nb_away', 'league', 'season', 'week' 'file', 'home', 'away',
+GAMES_ATTRIB = ['id_home', 'id_away', 'nb_home', 'nb_away', 'league', 'season', 'week', 'file', 'home', 'away',
                 
                 'h_formation',
                 'h_goals', 'h_goals_inside_box', 'h_%_goals_inside', 'h_goals_outside_box', 'h_%_goals_outside',
@@ -98,8 +98,8 @@ GAMES_ATTRIB = ['id_home', 'id_away', 'nb_home', 'nb_away', 'league', 'season', 
                 'a_penalty_saves', 'a_corners', 'a_corner_crosses', 'a_corners_won']
 
 
-PLAYERS_ATTRIB = ['id_player', 'id_home', 'id_away', 'nb_home', 'nb_away', 'league', 'season', 'week' 'file',
-                  'team', 'opponent', 'player_name', 'formation',
+PLAYERS_ATTRIB = ['id_player', 'id_home', 'id_away', 'nb_home', 'nb_away', 'league', 'season', 'week', 'file',
+                  'team', 'opponent', 'player_name', 'formation', 'position',
 
                   'goals', 'goals_inside_box', '%_goals_inside', 'goals_outside_box', '%_goals_outside',
                   'free_kick_goals', '%_goals_free_kick', 'shots', '%_goals_shot', 'shots_on_goal',

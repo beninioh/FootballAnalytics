@@ -1,5 +1,6 @@
 from utils.logger import logger
 import pandas as pd
+import numpy as np
 
 
 def games_new_attr(df: pd.DataFrame):
@@ -64,8 +65,9 @@ def games_new_attr(df: pd.DataFrame):
     df['h_%_touches_dispossessed'] = df.h_dispossessed / df.h_touches 
     df['a_%_touches_dispossessed'] = df.a_dispossessed / df.a_touches 
     df['h_%_fouls_yellow_cards'] = df.h_yellow_cards / df.h_fouls_committed 
-    df['a_%_fouls_yellow_cards'] = df.a_yellow_cards / df.a_fouls_committed 
+    df['a_%_fouls_yellow_cards'] = df.a_yellow_cards / df.a_fouls_committed
 
+    df.replace([np.inf, -np.inf, np.nan], 0, inplace=True)
     return df
 
 
@@ -102,6 +104,7 @@ def players_new_attr(df: pd.DataFrame):
     df['%_touches_dispossessed'] = df.dispossessed / df.touches 
     df['%_fouls_yellow_cards'] = df.yellow_cards / df.fouls_committed
 
+    df.replace([np.inf, -np.inf, np.nan], 0, inplace=True)
     return df
 
 
@@ -113,12 +116,12 @@ def games_id_and_check(df: pd.DataFrame, df_games: pd.DataFrame, teams: pd.DataF
 
     h = [
         f"""h_{1 + len(df_games.iloc[:i].query(f"id_home.str.contains('{df_games.home.values[i]}')"))}_{df_games.home.values[i]}"""
-        for i in list(df.index)
+        for i in list(df.loc[:, 'index'].values)
         ]
 
     a = [
         f"""a_{1 + len(df_games.iloc[:i].query(f"id_away.str.contains('{df_games.away.values[i]}')"))}_{df_games.away.values[i]}"""
-        for i in list(df.index)
+        for i in list(df.loc[:, 'index'].values)
         ]
 
     df['nb_home'] = h
