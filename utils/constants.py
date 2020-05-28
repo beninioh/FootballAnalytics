@@ -40,6 +40,8 @@ PRLEAGUE_TEAMS = {'BUR': 'Burnley', 'BOU': 'Bornemouth', 'CRY': 'Crystal_palace'
 TEAMS = {'ligue1': LIGUE1_TEAMS, 'prleague': PRLEAGUE_TEAMS}
 
 GAMES_ATTRIB = ['id_home', 'id_away', 'nb_home', 'nb_away', 'league', 'season', 'week', 'file', 'home', 'away',
+
+                'score', 'h_points', 'a_points',
                 
                 'h_formation',
                 'h_goals', 'h_goals_inside_box', 'h_%_goals_inside', 'h_goals_outside_box', 'h_%_goals_outside',
@@ -99,7 +101,7 @@ GAMES_ATTRIB = ['id_home', 'id_away', 'nb_home', 'nb_away', 'league', 'season', 
 
 
 PLAYERS_ATTRIB = ['id_player', 'id_home', 'id_away', 'nb_home', 'nb_away', 'league', 'season', 'week', 'file',
-                  'team', 'opponent', 'player_name', 'formation', 'position',
+                  'team', 'opponent', 'player_name', 'formation', 'position', 'minutes',
 
                   'goals', 'goals_inside_box', '%_goals_inside', 'goals_outside_box', '%_goals_outside',
                   'free_kick_goals', '%_goals_free_kick', 'shots', '%_goals_shot', 'shots_on_goal',
@@ -127,3 +129,53 @@ PLAYERS_ATTRIB = ['id_player', 'id_home', 'id_away', 'nb_home', 'nb_away', 'leag
                   'penalty_kicks_saved', 'free_kick_crosses', 'free_kick_accurate_crosses', 
                   'free_kick_shots', 'free_kick_shots_on_goal', 'penalty_kicks_conceded', 'penalties_faced', 
                   'penalty_saves', 'corners', 'corner_crosses', 'corners_won']
+
+
+SUMMARY_ATTRIB = ['id_player', 'league', 'season', 'team', 'player_name', 'position', 'minutes',
+
+                  'goals', 'goals_inside_box', '%_goals_inside', 'goals_outside_box', '%_goals_outside',
+                  'free_kick_goals', '%_goals_free_kick', 'shots', '%_goals_shot', 'shots_on_goal',
+                  '%_goals_shot_on', '%_shot_shot_on', 'shots_inside_box', '%_goals_shot_inside',
+                  '%_shot_shot_inside', 'shots_on_goal_inside_box', '%_goals_shot_on_inside',
+                  '%_shot_shot_on_inside', 'shots_outside_box', '%_goals_shot_outside', '%_shot_shot_outside',
+                  'shots_on_goal_outside_box', '%_goals_shot_on_outside', '%_shot_shot_on_outside', 'blocks',
+                  'assists', 'secondary_assists', 'assists_from_open_play', '%_assists_open_play',
+                  'assists_from_set_play', '%_assists_set_play', 'assist_penalties_won', 'chances_created',
+                  '%_goals_chances', 'big_chances_created', '%_goals_big_chances',
+                  'chances_created_from_open_play', '%_chances_open_play', 'chances_created_from_set_play',
+                  '%_chances_set_play', 'big_chance_missed', '%_big_chances_missed', 'big_chance_scored',
+                  '%_big_chances_scored', 'touches', 'touches_in_box', '%_touches_in_box', 'attempted_passes',
+                  'passes', '%_passes_attempted', 'accurate_long_balls', '%_passes_long_balls',
+                  'accurate_through_balls', '%_passes_through_balls', 'crosses', 'accurate_crosses',
+                  '%_crosses_accurate', 'accurate_crosses_open_play', 'attempted_dribbles', '%_dribbles_accurate',
+                  'dribbles', '%_touches_dribbles', 'dispossessed', '%_touches_dispossessed', 'aerials_won',
+                  'duels_won', 'ball_recoveries', 'interceptions', 'tackles', 'tackles_won',
+                  'last_man_tackle', 'errors_lead_to_goal', 'errors_lead_to_shot', 'assist_own_goals',
+                  'own_goals', 'clearances', 'effective_clearances', 'fouls_committed', 'fouls_suffered',
+                  'yellow_cards', '%_fouls_yellow_cards', 'yellow/red_cards', 'red_cards',
+                  'goals_conceded', 'clean_sheets', 'saves', 'saves_from_shots_inside_box',
+                  'saves_from_shots_outside_box', 'accurate_keeper_sweeper', 'punches',
+                  'total_offside', 'penalty_kicks_taken', 'penalty_kick_goals', 'penalty_kick_misses',
+                  'penalty_kicks_saved', 'free_kick_crosses', 'free_kick_accurate_crosses',
+                  'free_kick_shots', 'free_kick_shots_on_goal', 'penalty_kicks_conceded', 'penalties_faced',
+                  'penalty_saves', 'corners', 'corner_crosses', 'corners_won']
+
+
+ATTR_ORIGINAL = ['id_player', 'league', 'season', 'team', 'player_name', 'position', 'minutes', 'goals',
+                 'goals_inside_box',
+                 'goals_outside_box', 'free_kick_goals', 'shots', 'shots_on_goal', 'shots_inside_box',
+                 'shots_on_goal_inside_box', 'shots_outside_box', 'shots_on_goal_outside_box', 'blocks', 'assists',
+                 'secondary_assists', 'assists_from_open_play', 'assists_from_set_play', 'assist_penalties_won',
+                 'chances_created', 'big_chances_created', 'chances_created_from_open_play',
+                 'chances_created_from_set_play', 'big_chance_missed', 'big_chance_scored', 'touches', 'touches_in_box',
+                 'attempted_passes', 'passes', 'accurate_long_balls', 'accurate_through_balls', 'crosses',
+                 'accurate_crosses', 'accurate_crosses_open_play', 'attempted_dribbles', 'dribbles', 'dispossessed',
+                 'aerials_won', 'duels_won', 'ball_recoveries', 'interceptions', 'tackles', 'tackles_won',
+                 'last_man_tackle', 'errors_lead_to_goal', 'errors_lead_to_shot', 'assist_own_goals', 'own_goals',
+                 'clearances', 'effective_clearances', 'fouls_committed', 'fouls_suffered', 'yellow_cards',
+                 'yellow/red_cards', 'red_cards', 'goals_conceded', 'clean_sheets', 'saves',
+                 'saves_from_shots_inside_box', 'saves_from_shots_outside_box', 'accurate_keeper_sweeper', 'punches',
+                 'total_offside', 'penalty_kicks_taken', 'penalty_kick_goals', 'penalty_kick_misses',
+                 'penalty_kicks_saved', 'free_kick_crosses', 'free_kick_accurate_crosses', 'free_kick_shots',
+                 'free_kick_shots_on_goal', 'penalty_kicks_conceded', 'penalties_faced', 'penalty_saves', 'corners',
+                 'corner_crosses', 'corners_won']

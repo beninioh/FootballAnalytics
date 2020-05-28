@@ -72,7 +72,7 @@ def games_new_attr(df: pd.DataFrame):
 
 
 def players_new_attr(df: pd.DataFrame):
-    df['%_goals_inside'] = df.goals_inside_box / df.goals 
+    df['%_goals_inside'] = df.goals_inside_box / df.goals
     df['%_goals_outside'] = df.goals_outside_box / df.goals 
     df['%_goals_free_kick'] = df.free_kick_goals / df.goals 
     df['%_goals_shot'] = df.shots / df.goals 
@@ -108,6 +108,43 @@ def players_new_attr(df: pd.DataFrame):
     return df
 
 
+def summary_players_new_attr(df: pd.DataFrame):
+    df['%_goals_inside'] = df.goals_inside_box / df.goals if df.goals != 0 else 0
+    df['%_goals_outside'] = df.goals_outside_box / df.goals if df.goals != 0 else 0
+    df['%_goals_free_kick'] = df.free_kick_goals / df.goals if df.goals != 0 else 0
+    df['%_goals_shot'] = df.shots / df.goals if df.goals != 0 else 0
+    df['%_goals_shot_on'] = df.shots_on_goal / df.goals if df.goals != 0 else 0
+    df['%_shot_shot_on'] = df.shots_on_goal / df.shots if df.shots != 0 else 0
+    df['%_goals_shot_inside'] = df.goals_inside_box / df.goals if df.goals != 0 else 0
+    df['%_shot_shot_inside'] = df.goals_inside_box / df.shots if df.shots != 0 else 0
+    df['%_goals_shot_on_inside'] = df.shots_on_goal_inside_box / df.goals if df.goals != 0 else 0
+    df['%_shot_shot_on_inside'] = df.shots_on_goal_inside_box / df.shots if df.shots != 0 else 0
+    df['%_goals_shot_outside'] = df.goals_outside_box / df.goals if df.goals != 0 else 0
+    df['%_shot_shot_outside'] = df.goals_outside_box / df.shots if df.shots != 0 else 0
+    df['%_goals_shot_on_outside'] = df.shots_on_goal_outside_box / df.goals if df.goals != 0 else 0
+    df['%_shot_shot_on_outside'] = df.shots_on_goal_outside_box / df.shots if df.shots != 0 else 0
+    df['%_assists_open_play'] = df.assists_from_open_play / df.assists if df.assists != 0 else 0
+    df['%_assists_set_play'] = df.assists_from_set_play / df.assists if df.assists != 0 else 0
+    df['%_goals_chances'] = df.chances_created / df.goals if df.goals != 0 else 0
+    df['%_goals_big_chances'] = df.big_chances_created / df.goals if df.goals != 0 else 0
+    df['%_chances_open_play'] = df.chances_created_from_open_play / df.chances_created if df.chances_created != 0 else 0
+    df['%_chances_set_play'] = df.chances_created_from_set_play / df.chances_created if df.chances_created != 0 else 0
+    df['%_big_chances_missed'] = df.big_chance_missed / df.big_chances_created if df.big_chances_created != 0 else 0
+    df['%_big_chances_scored'] = df.big_chance_scored / df.big_chances_created if df.big_chances_created != 0 else 0
+    df['%_touches_in_box'] = df.touches_in_box / df.touches if df.touches != 0 else 0
+    df['%_passes_attempted'] = df.attempted_passes / df.passes if df.passes != 0 else 0
+    df['%_passes_long_balls'] = df.accurate_long_balls / df.passes if df.passes != 0 else 0
+    df['%_passes_through_balls'] = df.accurate_through_balls / df.passes if df.passes != 0 else 0
+    df['%_crosses_accurate'] = df.accurate_crosses / df.crosses if df.crosses != 0 else 0
+    df['%_touches_dribbles'] = df.dribbles / df.touches if df.touches != 0 else 0
+    df['%_dribbles_accurate'] = df.attempted_dribbles / df.dribbles if df.dribbles != 0 else 0
+    df['%_touches_dispossessed'] = df.dispossessed / df.touches if df.touches != 0 else 0
+    df['%_fouls_yellow_cards'] = df.yellow_cards / df.fouls_committed if df.fouls_committed != 0 else 0
+
+    df.replace([np.inf, -np.inf, np.nan], 0, inplace=True)
+    return df
+
+
 def games_id_and_check(df: pd.DataFrame, df_games: pd.DataFrame, teams: pd.DataFrame):
     if len(set(df.home.values)) != 10:
         print(df.week.values[0], teams - set(df.home.values).union(set(df.away.values)))
@@ -130,7 +167,7 @@ def games_id_and_check(df: pd.DataFrame, df_games: pd.DataFrame, teams: pd.DataF
     return df
 
 
-def _add_games_id_for_players(df: pd.DataFrame, df_games: pd.DataFrame):
+def add_games_id_for_players(df: pd.DataFrame, df_games: pd.DataFrame):
 
     game = df_games.query(
             f"id_home.str.contains('{df.team.values[0]}') and id_away.str.contains('{df.opponent.values[0]}')"
@@ -157,13 +194,6 @@ def _add_games_id_for_players(df: pd.DataFrame, df_games: pd.DataFrame):
     return df
 
 
-def games_id_for_players(df_players: pd.DataFrame, league: str, season: str):
-    df_games = pd.read_csv(f'rotowire/{league}/games/games_{league}_{season}.csv')
-    rs = df_players.groupby(['team', 'opponent']).apply(_add_games_id_for_players, df_games)
-
-    return rs
-
-
 def players_id(df_players: pd.DataFrame):
 
     teams = set(df_players.team.values).union(df_players.opponent.values)
@@ -183,4 +213,22 @@ def players_id(df_players: pd.DataFrame):
     return df_players
 
 
+def _compute_point(row):
+    if row.h_goals > row.a_goals:
+        row['h_points'] = 3
+        row['a_points'] = 0
+    elif row.h_goals < row.a_goals:
+        row['h_points'] = 0
+        row['a_points'] = 3
+    else:
+        row['h_points'] = 1
+        row['a_points'] = 1
 
+    return row
+
+
+def score_and_points(df: pd.DataFrame):
+    df['score'] = df.h_goals.astype(str) + '-' + df.a_goals.astype(str)
+    df = df.apply(lambda row: _compute_point(row), axis=1)
+
+    return df

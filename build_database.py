@@ -14,7 +14,7 @@ Steps :
 - Download proper data from rotowire.com, and name it properly '{league}_{season}_{file}.csv'.
 - concat_csv : Concat all the files into one and add attributes to make sql request easier.
 - Add the exported file to bigquery bucket.
-- players2games : From all the players of specific league / seasons, deduce games.
+- compute_games : From all the players of specific league / seasons, deduce games.
 - enrich_players : From all the players and the export files of players2games, get as much infos per players.
 """
 
@@ -108,23 +108,24 @@ def _get_game(df_team, week, i):
     return game
 
 
-def players2games(league: str, season: str):
+def compute_games(league: str, season: str) -> pd.DataFrame:
     """
     This methods goes from a directory to a csv files that will be export.
     The directory should contains different stats per players among one season and as much csv as week played.
     The csv' name should finish i.csv where i corresponds to week.
     Moreover, since the attributes from rotowire are not explicit enough, we will use the dictionary ATTR_MEANING
     to make them more readable.
-    The export csv represent all the games that has been happening during one season. Per games, different id are added,
+    The export csv represent all the df_games that has been happening during one season. Per df_games, different id are added,
     every attributes starting with h_ (a_) represent the home (away) team.
 
     :param league: str. League names ('ligue1', 'bundesliga', 'premiere_league' ...).
     :param season: str. Wanted season ('1718', '1920' ...).
-    :return: None. However, export file with all the games for one season.
+    :return: pd.Dataframe. Dataframe with all the df_games for one season.
     """
     from utils.fix_postponed import fix_postponed
+    from utils.enrichment import score_and_points
     from utils.query import get_data
-    logger.info(f'Running players2games for league : {league} and season : {season}')
+    logger.info(f'Computing games for league : {league} and season : {season}')
 
     query = f"""
             SELECT *
@@ -137,29 +138,29 @@ def players2games(league: str, season: str):
     def _to_name(week):
         i = week.file.values[0]
 
-        games = week.groupby(['team', 'opponent']).apply(_get_game, week, i). \
+        df_games = week.groupby(['team', 'opponent']).apply(_get_game, week, i). \
             reset_index(drop=True). \
             drop_duplicates(). \
             reset_index(drop=True)
 
-        games['week'] = [i] * len(games)
+        df_games['week'] = [i] * len(df_games)
 
-        return games
+        return df_games
 
-    df_games = data.groupby('file').apply(_to_name).reset_index([0, 1], drop=True)
-    df_games = fix_postponed(df_games, league, season)
+    games = data.groupby('file').apply(_to_name).reset_index([0, 1], drop=True)
+    games = fix_postponed(games, league, season)
 
-    df_games = df_games.groupby('week').apply(games_id_and_check, df_games, set(df_games.home.values))
-    df_games.reset_index([0, 1], drop=True, inplace=True)
-    df_games.drop(columns='index', inplace=True)
-    df_games = games_new_attr(df_games)
-    df_games = df_games.reindex(columns=GAMES_ATTRIB)
+    games = games.groupby('week').apply(games_id_and_check, games, set(games.home.values))
+    games.reset_index([0, 1], drop=True, inplace=True)
+    games.drop(columns='index', inplace=True)
+    games = score_and_points(games)
+    games = games_new_attr(games)
+    games = games.reindex(columns=GAMES_ATTRIB)
 
-    # breakpoint()
-    df_games.to_csv(f'rotowire/{league}/games/games_{league}_{season}.csv', index=False)
+    return games
 
 
-def enrich_players(league: str, season: str):
+def enrich_players(league: str, season: str, games: pd.DataFrame) -> pd.DataFrame:
     """
     This methods goes from a directory to a csv files that will be export.
     The directory should contains different stats per players among one season and as much csv as week played.
@@ -170,11 +171,11 @@ def enrich_players(league: str, season: str):
     Finally, the export csv is a concatenation of all the csv with new attributes names and the attribute 'week'.
 
     :param league: str. League names ('ligue1', 'bundesliga', 'premiere_league' ...).
-    :param season: str. Wanted season ('1718', '1920' ...).
     :param season: str. Season where the data is from in order to add it as an attribute.
-    :return: None. Will export the desired csv.
+    :param games: pd.Dataframe. Dataframe compute by compute_games for same league and season.
+    :return: pd.Dataframe. Dataframe containing all the row of players with new attributes.
     """
-    from utils.enrichment import games_id_for_players, players_new_attr, players_id
+    from utils.enrichment import add_games_id_for_players, players_new_attr, players_id
     from utils.query import get_data
     logger.info(f'Running enrich_players for league : {league} and season : {season}')
 
@@ -186,28 +187,77 @@ def enrich_players(league: str, season: str):
 
     players = get_data(query)
 
-    players = games_id_for_players(players, league, season)
+    players = players.groupby(['team', 'opponent']).apply(add_games_id_for_players, games)
     players = players_new_attr(players)
     players = players_id(players)
     players = players.reindex(columns=PLAYERS_ATTRIB)
 
-    players.to_csv(f'rotowire/{league}/players/players_{league}_{season}.csv', index=False)
+    return players
 
 
-def players_per_season(league: str, season: str):
-    df = pd.read_csv(f'rotowire/{league}/players/players_{league}_{season}.csv', index=False)
+def _player_summary(df):
+    from utils.enrichment import summary_players_new_attr
+
+    df_sum = df.drop(columns=['id_player', 'league', 'season', 'team', 'player_name', 'position'])
+    df_sum = df_sum.sum()
+    df_sum = summary_players_new_attr(df_sum)
+
+    for attr in ['league', 'season', 'team', 'player_name', 'position']:
+        df_sum[attr] = df.loc[:, attr].value_counts().index[0]
+
+    return df_sum.to_frame().transpose()
+
+
+def summarise_players(players: pd.DataFrame) -> pd.DataFrame:
+    """
+
+    :param players:
+    :return:
+    """
+    from utils.constants import ATTR_ORIGINAL, SUMMARY_ATTRIB
+
+    players = players.loc[:, ATTR_ORIGINAL]
+    players_summary = players.groupby('id_player').apply(_player_summary)
+    players_summary = players_summary.reindex(columns=SUMMARY_ATTRIB)
+
+    return players_summary
+
+
+
+def excel_export(leagues: List[str], seasons: List[str]) -> None:
+    """
+    Given different leagues and seasons, will export one excel file containing all the data.
+    :param leagues: List[str]. List of all leagues.
+    :param seasons: List[str]. List of all seasons.
+    :return: None. Will export the csv file.
+    """
+    logger.info(f'Exporting csv files for leagues : {leagues} and seasons : {seasons}')
+
+    for league in leagues:
+        for season in seasons:
+            writer = pd.ExcelWriter(f'excel_files/{league}_{season}.xlsx')
+
+            games = compute_games(league, season)
+            players = enrich_players(league, season, games)
+            summary_players = summarise_players(players)
+
+            games.to_excel(excel_writer=writer, sheet_name=f'games_{league}_{season}', index=False)
+            players.to_excel(excel_writer=writer, sheet_name=f'players_{league}_{season}', index=False)
+            summary_players.to_excel(excel_writer=writer, sheet_name=f'summary_players_{league}_{season}', index=False)
+
+            try:
+                writer.save()
+            except PermissionError:
+                import os
+                os.remove(f'excel_files/{league}_{season}.xlsx')
+                writer.save()
+
+            breakpoint()
 
 
 # concat_csv(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
 # breakpoint()
 
-# for league in ['ligue1', 'prleague']:
-#     for season in ['1617', '1718', '1819', '1920']:
-#         players2games(league, season)
-# breakpoint()
-
-for league in ['ligue1', 'prleague']:
-    for season in ['1617', '1718', '1819', '1920']:
-        enrich_players(league, season)
+excel_export(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
 
 
