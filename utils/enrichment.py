@@ -169,14 +169,18 @@ def games_id_and_check(df: pd.DataFrame, df_games: pd.DataFrame, teams: pd.DataF
 
 def add_games_id_for_players(df: pd.DataFrame, df_games: pd.DataFrame):
 
-    game = df_games.query(
-            f"id_home.str.contains('{df.team.values[0]}') and id_away.str.contains('{df.opponent.values[0]}')"
-                         )
+    if df.home_away.values[0] == 'H':
+        game = df_games.query(
+                f"id_home.str.contains('{df.team.values[0]}') and id_away.str.contains('{df.opponent.values[0]}')"
+                             )
 
-    if game.empty:
+    elif df.home_away.values[0] == 'A':
         game = df_games.query(
             f"id_home.str.contains('{df.opponent.values[0]}') and id_away.str.contains('{df.team.values[0]}')"
                              )
+    else:
+        print(df.team.values[0], df.opponent.values[0], df.home_away.values[0])
+        breakpoint()
 
     for id_nb in ('id_home', 'id_away', 'nb_home', 'nb_away'):
         try:
@@ -184,12 +188,7 @@ def add_games_id_for_players(df: pd.DataFrame, df_games: pd.DataFrame):
         except ValueError:
             breakpoint()
 
-    try:
-        week = int(df.id_home.values[0][:2])
-    except ValueError:
-        week = int(df.id_home.values[0][:1])
-
-    df['week'] = [week] * len(df)
+    df['week'] = [int(df.id_home.values[0].split('_')[0])] * len(df)
 
     return df
 

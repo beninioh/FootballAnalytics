@@ -187,10 +187,11 @@ def enrich_players(league: str, season: str, games: pd.DataFrame) -> pd.DataFram
 
     players = get_data(query)
 
-    players = players.groupby(['team', 'opponent']).apply(add_games_id_for_players, games)
+    players = players.groupby(['team', 'opponent', 'home_away']).apply(add_games_id_for_players, games)
     players = players_new_attr(players)
     players = players_id(players)
     players = players.reindex(columns=PLAYERS_ATTRIB)
+    players.sort_values(['week', 'id_player'], inplace=True)
 
     return players
 
@@ -202,8 +203,16 @@ def _player_summary(df):
     df_sum = df_sum.sum()
     df_sum = summary_players_new_attr(df_sum)
 
-    for attr in ['league', 'season', 'team', 'player_name', 'position']:
+    for attr in ['league', 'season', 'team', 'player_name']:
         df_sum[attr] = df.loc[:, attr].value_counts().index[0]
+
+    pos = df.loc[:, 'position'].value_counts().index
+    if pos[0] != 'SUB':
+        df_sum['position'] = pos[0]
+    elif pos[0] == 'SUB' and len(pos) > 1:
+        df_sum['position'] = pos[1]
+    else:
+        df_sum['position'] = 'SUB'
 
     return df_sum.to_frame().transpose()
 
@@ -218,10 +227,10 @@ def summarise_players(players: pd.DataFrame) -> pd.DataFrame:
 
     players = players.loc[:, ATTR_ORIGINAL]
     players_summary = players.groupby('id_player').apply(_player_summary)
+    players_summary.reset_index(inplace=True)
     players_summary = players_summary.reindex(columns=SUMMARY_ATTRIB)
 
     return players_summary
-
 
 
 def excel_export(leagues: List[str], seasons: List[str]) -> None:
@@ -249,10 +258,15 @@ def excel_export(leagues: List[str], seasons: List[str]) -> None:
                 writer.save()
             except PermissionError:
                 import os
-                os.remove(f'excel_files/{league}_{season}.xlsx')
+                try:
+                    os.remove(f'excel_files/{league}_{season}.xlsx')
+                except PermissionError:
+                    logger.error('PermissionError : please close file and press c.')
+                    breakpoint()
+                    os.remove(f'excel_files/{league}_{season}.xlsx')
                 writer.save()
 
-            breakpoint()
+            # breakpoint()
 
 
 # concat_csv(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
