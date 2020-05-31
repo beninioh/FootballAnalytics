@@ -214,6 +214,8 @@ def _player_summary(df):
     else:
         df_sum['position'] = 'SUB'
 
+    df_sum['played_games'] = len(df.query('minutes > 0'))
+
     return df_sum.to_frame().transpose()
 
 

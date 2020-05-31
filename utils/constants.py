@@ -101,7 +101,7 @@ GAMES_ATTRIB = ['id_home', 'id_away', 'nb_home', 'nb_away', 'league', 'season', 
 
 
 PLAYERS_ATTRIB = ['id_player', 'id_home', 'id_away', 'nb_home', 'nb_away', 'league', 'season', 'week', 'file',
-                  'team', 'opponent', 'player_name', 'formation', 'position', 'minutes',
+                  'team', 'opponent', 'home_away', 'player_name', 'formation', 'position', 'minutes',
 
                   'goals', 'goals_inside_box', '%_goals_inside', 'goals_outside_box', '%_goals_outside',
                   'free_kick_goals', '%_goals_free_kick', 'shots', '%_goals_shot', 'shots_on_goal',
@@ -131,7 +131,7 @@ PLAYERS_ATTRIB = ['id_player', 'id_home', 'id_away', 'nb_home', 'nb_away', 'leag
                   'penalty_saves', 'corners', 'corner_crosses', 'corners_won']
 
 
-SUMMARY_ATTRIB = ['id_player', 'league', 'season', 'team', 'player_name', 'position', 'minutes',
+SUMMARY_ATTRIB = ['id_player', 'league', 'season', 'team', 'player_name', 'position', 'minutes', 'played_games',
 
                   'goals', 'goals_inside_box', '%_goals_inside', 'goals_outside_box', '%_goals_outside',
                   'free_kick_goals', '%_goals_free_kick', 'shots', '%_goals_shot', 'shots_on_goal',
