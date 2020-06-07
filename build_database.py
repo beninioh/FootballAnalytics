@@ -1,10 +1,9 @@
-from utils.constants import ATTR_MEANING, GAMES_ATTRIB, PLAYERS_ATTRIB, TEAMS
+from utils.constants import ATTR_MEANING, GAMES_ATTRIB, PLAYERS_ATTRIB, TEAMS, TEAMS_ATTRIB
 from utils.enrichment import games_new_attr, games_id_and_check
 from utils.logger import logger
 from typing import List
 import pandas as pd
 import glob
-
 
 """
 From the data coming from rotowire, one csv per "week" per league per season, where a row corresponds to how a player
@@ -64,7 +63,7 @@ def concat_csv(leagues: List[str], seasons: List[str]):
     df_csv = pd.concat(all_csv, ignore_index=True, sort=False)
 
     breakpoint()
-    df_csv.to_csv(f'rotowire/database/players_{leagues[0]}_{seasons[0][:2]+seasons[-1][2:]}.csv', index=False)
+    df_csv.to_csv(f'rotowire/database/players_{leagues[0]}_{seasons[0][:2] + seasons[-1][2:]}.csv', index=False)
 
 
 def _get_game(df_team, week, i):
@@ -87,14 +86,16 @@ def _get_game(df_team, week, i):
                               'file': df_away.file.unique(),
                               'h_formation': [df_home.formation.unique()[0]],
                               'a_formation': [df_away.formation.unique()[0]],
-                              'week': [i]})
+                              'week': [i],
+                              'h_goals_conceded': [df_home.goals_conceded.unique()[0]],
+                              'a_goals_conceded': [df_away.goals_conceded.unique()[0]]})
 
     df_home.drop(columns=['player_name', 'team', 'opponent', 'home_away', 'formation', 'position',
                           'games_played', 'minutes', 'starts', 'sub_on', 'sub_off',
-                          'league', 'season', 'file'], inplace=True)
+                          'league', 'season', 'file', 'goals_conceded'], inplace=True)
     df_away.drop(columns=['player_name', 'team', 'opponent', 'home_away', 'formation', 'position',
                           'games_played', 'minutes', 'starts', 'sub_on', 'sub_off',
-                          'league', 'season', 'file'], inplace=True)
+                          'league', 'season', 'file', 'goals_conceded'], inplace=True)
 
     df_home.rename(columns={x: 'h_' + x for x in df_home.keys()}, inplace=True)
     df_away.rename(columns={x: 'a_' + x for x in df_away.keys()}, inplace=True)
@@ -225,14 +226,65 @@ def summarise_players(players: pd.DataFrame) -> pd.DataFrame:
     :param players:
     :return:
     """
-    from utils.constants import ATTR_ORIGINAL, SUMMARY_ATTRIB
+    from utils.constants import PLAY_ORIGINAL, SUMMARY_ATTRIB
 
-    players = players.loc[:, ATTR_ORIGINAL]
+    players = players.loc[:, PLAY_ORIGINAL]
     players_summary = players.groupby('id_player').apply(_player_summary)
     players_summary.reset_index(inplace=True)
     players_summary = players_summary.reindex(columns=SUMMARY_ATTRIB)
 
     return players_summary
+
+
+def _home_summary(df):
+    from utils.constants import H_GAME_ORIGINAL
+    from utils.enrichment import players_new_attr
+
+    df_original = df.loc[:, H_GAME_ORIGINAL]
+    df_original.rename(columns={s: '_'.join(s.split('_')[1:]) for s in df_original.keys()}, inplace=True)
+    df_original = df_original.sum()
+    # df_original = players_new_attr(df_original)
+
+    return df_original
+
+
+def _away_summary(df):
+    from utils.constants import A_GAME_ORIGINAL
+    from utils.enrichment import players_new_attr
+
+    df_original = df.loc[:, A_GAME_ORIGINAL]
+    df_original.rename(columns={s: '_'.join(s.split('_')[1:]) for s in df_original.keys()}, inplace=True)
+    df_original = df_original.sum()
+    # df_original = players_new_attr(df_original)
+
+    return df_original
+
+
+def _all_summary(df):
+    from utils.enrichment import players_new_attr
+
+    df.drop(columns='index', inplace=True)
+    df = df.sum()
+    df = players_new_attr(df)
+
+    return df
+
+
+def summarise_teams(games: pd.DataFrame, league: str, season: str,) -> pd.DataFrame:
+    home = games.groupby('home').apply(_home_summary)
+    away = games.groupby('away').apply(_away_summary)
+
+    teams = pd.concat([home, away], sort=False)
+    teams.reset_index(inplace=True)
+    teams = teams.groupby(by='index').apply(_all_summary)
+    teams['league'] = [league] * len(teams)
+    teams['season'] = [season] * len(teams)
+    teams = teams.reindex(columns=TEAMS_ATTRIB)
+    teams.sort_values(by='points', ascending=False, inplace=True)
+    teams.reset_index(inplace=True)
+    teams.rename(columns={'index': 'team'}, inplace=True)
+
+    return teams
 
 
 def excel_export(leagues: List[str], seasons: List[str]) -> None:
@@ -249,12 +301,14 @@ def excel_export(leagues: List[str], seasons: List[str]) -> None:
             writer = pd.ExcelWriter(f'excel_files/{league}_{season}.xlsx')
 
             games = compute_games(league, season)
+            summary_games = summarise_teams(games, league, season)
             players = enrich_players(league, season, games)
             summary_players = summarise_players(players)
 
             games.to_excel(excel_writer=writer, sheet_name=f'games_{league}_{season}', index=False)
             players.to_excel(excel_writer=writer, sheet_name=f'players_{league}_{season}', index=False)
             summary_players.to_excel(excel_writer=writer, sheet_name=f'summary_players_{league}_{season}', index=False)
+            summary_games.to_excel(excel_writer=writer, sheet_name=f'summary_teams_{league}_{season}', index=False)
 
             try:
                 writer.save()
@@ -268,12 +322,10 @@ def excel_export(leagues: List[str], seasons: List[str]) -> None:
                     os.remove(f'excel_files/{league}_{season}.xlsx')
                 writer.save()
 
-            # breakpoint()
+            breakpoint()
 
 
 # concat_csv(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
 # breakpoint()
 
 excel_export(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
-
-
