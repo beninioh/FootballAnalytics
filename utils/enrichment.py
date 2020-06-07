@@ -213,10 +213,10 @@ def players_id(df_players: pd.DataFrame):
 
 
 def _compute_point(row):
-    if row.h_goals > row.a_goals:
+    if row.h_goals + row.a_own_goals > row.a_goals + row.h_own_goals:
         row['h_points'] = 3
         row['a_points'] = 0
-    elif row.h_goals < row.a_goals:
+    elif row.h_goals + row.a_own_goals < row.a_goals + row.h_own_goals:
         row['h_points'] = 0
         row['a_points'] = 3
     else:
@@ -227,7 +227,7 @@ def _compute_point(row):
 
 
 def score_and_points(df: pd.DataFrame):
-    df['score'] = df.h_goals.astype(str) + '-' + df.a_goals.astype(str)
+    df['score'] = (df.h_goals+df.a_own_goals).astype(str) + '-' + (df.a_goals+df.h_own_goals).astype(str)
     df = df.apply(lambda row: _compute_point(row), axis=1)
 
     return df
