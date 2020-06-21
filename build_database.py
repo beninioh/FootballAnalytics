@@ -287,6 +287,16 @@ def summarise_teams(games: pd.DataFrame, league: str, season: str,) -> pd.DataFr
     return teams
 
 
+def get_games(leagues: List[str], seasons: List[str]):
+    games = []
+
+    for league in leagues:
+        for season in seasons:
+            games.append(compute_games(league, season))
+
+    return pd.concat(games, ignore_index=True, sort=False)
+
+
 def excel_export(leagues: List[str], seasons: List[str]) -> None:
     """
     Given different leagues and seasons, will export one excel file containing all the data.
@@ -322,10 +332,9 @@ def excel_export(leagues: List[str], seasons: List[str]) -> None:
                     os.remove(f'excel_files/{league}_{season}.xlsx')
                 writer.save()
 
-            breakpoint()
-
 
 # concat_csv(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
 # breakpoint()
 
-excel_export(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
+# excel_export(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
+
