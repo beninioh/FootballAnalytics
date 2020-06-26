@@ -3,6 +3,7 @@ from utils.enrichment import games_new_attr, games_id_and_check
 from utils.logger import logger
 from typing import List
 import pandas as pd
+import sqlite3
 import glob
 
 """
@@ -32,38 +33,39 @@ def get_files(files_dir: List[str]):
     return files
 
 
-def concat_csv(leagues: List[str], seasons: List[str]):
+def players_2sql(leagues: List[str], seasons: List[str]):
     """
-    From all the csv of a season in a specific league, will concat into one csv with a file attribute.
+    From all the csv of seasons and leagues, will concat into one sql database.
     Moreover, the attributes names and the different teams are made more meaningful. And attributes league,
     season, week, file are add to make sql queries easier.
-    Then a csv is export in the database repository and it needs to be added to google query.
     :param leagues: List[str]. All the desired league.
     :param seasons: List. All the desired season.
-    :return: Export the csv to add to the bigquery bucket.
+    :return: Export the sql database PlayersInfo.db in rotowire/database.
     """
-    all_csv = []
+    conn = sqlite3.connect('rotowire/database/PlayersInfo.db')
 
     for league in leagues:
         for season in seasons:
             files_dir = glob.glob(f'rotowire/{league}/players/{season}/*.csv')
             files = get_files(files_dir)
 
+            season_league = []
             for i in range(1, len(files) + 1):
                 csv = pd.read_csv(files[i]).rename(columns=ATTR_MEANING)
-                csv['team'] = csv.team.apply(lambda x: TEAMS[league][x])
+                try:
+                    csv['team'] = csv.team.apply(lambda x: TEAMS[league][x])
+                except KeyError:
+                    breakpoint()
                 csv['opponent'] = csv.opponent.apply(lambda x: TEAMS[league][x])
 
                 csv['league'] = [league] * len(csv)
                 csv['season'] = [season] * len(csv)
                 csv['file'] = [i] * len(csv)
 
-                all_csv.append(csv)
+                season_league.append(csv)
 
-    df_csv = pd.concat(all_csv, ignore_index=True, sort=False)
-
-    breakpoint()
-    df_csv.to_csv(f'rotowire/database/players_{leagues[0]}_{seasons[0][:2] + seasons[-1][2:]}.csv', index=False)
+            df_season_league = pd.concat(season_league, ignore_index=True, sort=False)
+            df_season_league.to_sql(f'{league}_{season}', con=conn, if_exists='replace', index=False)
 
 
 def _get_game(df_team, week, i):
@@ -116,8 +118,8 @@ def compute_games(league: str, season: str) -> pd.DataFrame:
     The csv' name should finish i.csv where i corresponds to week.
     Moreover, since the attributes from rotowire are not explicit enough, we will use the dictionary ATTR_MEANING
     to make them more readable.
-    The export csv represent all the df_games that has been happening during one season. Per df_games, different id are added,
-    every attributes starting with h_ (a_) represent the home (away) team.
+    The export csv represent all the df_games that has been happening during one season. Per df_games, different id are
+    added, every attributes starting with h_ (a_) represent the home (away) team.
 
     :param league: str. League names ('ligue1', 'bundesliga', 'premiere_league' ...).
     :param season: str. Wanted season ('1718', '1920' ...).
@@ -125,16 +127,10 @@ def compute_games(league: str, season: str) -> pd.DataFrame:
     """
     from utils.fix_postponed import fix_postponed
     from utils.enrichment import score_and_points
-    from utils.query import get_data
     logger.info(f'Computing games for league : {league} and season : {season}')
 
-    query = f"""
-            SELECT *
-            FROM football-basic-analysis.football.raw_players
-            WHERE season = {season} and league = '{league}'
-            """
-
-    data = get_data(query)
+    conn = sqlite3.connect('rotowire/database/PlayersInfo.db')
+    data = pd.read_sql_query(f'SELECT * FROM {league}_{season}', con=conn)
 
     def _to_name(week):
         i = week.file.values[0]
@@ -177,16 +173,10 @@ def enrich_players(league: str, season: str, games: pd.DataFrame) -> pd.DataFram
     :return: pd.Dataframe. Dataframe containing all the row of players with new attributes.
     """
     from utils.enrichment import add_games_id_for_players, players_new_attr, players_id
-    from utils.query import get_data
     logger.info(f'Running enrich_players for league : {league} and season : {season}')
 
-    query = f"""
-            SELECT *
-            FROM football-basic-analysis.football.raw_players
-            WHERE season = {season} and league = '{league}'
-            """
-
-    players = get_data(query)
+    conn = sqlite3.connect('rotowire/database/PlayersInfo.db')
+    players = pd.read_sql_query(f'SELECT * FROM {league}_{season}', con=conn)
 
     players = players.groupby(['team', 'opponent', 'home_away']).apply(add_games_id_for_players, games)
     players = players_new_attr(players)
@@ -287,14 +277,21 @@ def summarise_teams(games: pd.DataFrame, league: str, season: str,) -> pd.DataFr
     return teams
 
 
-def get_games(leagues: List[str], seasons: List[str]):
-    games = []
+def games_2sql(leagues: List[str], seasons: List[str]):
+    """
+    From all the csv of seasons and leagues, will computes the games and then concat it into one sql database.
+    :param leagues: List[str]. All the desired league.
+    :param seasons: List. All the desired season.
+    :return: Export the sql database GamesInfo.db in rotowire/database.
+    """
+
+    conn = sqlite3.connect('rotowire/database/GamesInfo.db')
+    c = conn.cursor()
 
     for league in leagues:
         for season in seasons:
-            games.append(compute_games(league, season))
-
-    return pd.concat(games, ignore_index=True, sort=False)
+            games = compute_games(league, season)
+            games.to_sql(f'{league}_{season}', con=conn, if_exists='replace', index=False)
 
 
 def excel_export(leagues: List[str], seasons: List[str]) -> None:
@@ -333,8 +330,8 @@ def excel_export(leagues: List[str], seasons: List[str]) -> None:
                 writer.save()
 
 
-# concat_csv(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
-# breakpoint()
+# players_2sql(['liga'], ['1617', '1718', '1819', '1920'])
+# games_2sql(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
 
 # excel_export(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
-
+excel_export(['liga'], ['1617'])

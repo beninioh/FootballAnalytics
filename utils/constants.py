@@ -39,7 +39,15 @@ PRLEAGUE_TEAMS = {'BUR': 'Burnley', 'BOU': 'Bornemouth', 'CRY': 'Crystal_palace'
                   'STO': 'Stoke_city',
                   'SWA': 'Swansea', 'MID': 'Middlesbrough', 'SUN': 'Sunderland', 'HUL': 'Hull_City'}
 
-TEAMS = {'ligue1': LIGUE1_TEAMS, 'prleague': PRLEAGUE_TEAMS}
+LIGA_TEAMS = {'RMD': 'Real_madrid', 'OSA': 'Osasuna', 'RSO': 'Real_Sociedad', 'CEL': 'Celta_vigo', 'GRA': 'Granada',
+              'ESP': 'Espanyol', 'DEP': 'Deportivo_Coruna', 'VAL': 'Valencia', 'ATH': 'Athletico_madrid',
+              'SPO': 'Gijon', 'EIB': 'Eibar', 'BAR': 'Barcelona', 'VIL': 'Villarreal', 'SEV': 'Sevilla',
+              'ATL': 'Athletico_bilbao', 'LPM': 'Las_palmas', 'LGN': 'Leganes', 'ALA': 'Alaves', 'MAL': 'Malaga',
+              'BET': 'Betis', 'LEV': 'Levante', 'GET': 'Getafe', 'GIR': 'Girone', 'RAY': 'Rayo_vallecano',
+              'REV': 'Valladolid', 'MRC': 'Mallorca', 'HUE': 'Huesca'}
+
+
+TEAMS = {'ligue1': LIGUE1_TEAMS, 'prleague': PRLEAGUE_TEAMS, 'liga': LIGA_TEAMS}
 
 GAMES_ATTRIB = ['id_home', 'id_away', 'nb_home', 'nb_away', 'league', 'season', 'week', 'file', 'home', 'away',
 
