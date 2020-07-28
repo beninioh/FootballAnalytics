@@ -1,10 +1,18 @@
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
-from typing import List, Dict
+from typing import List
 import pandas as pd
 import numpy as np
 import sqlite3
+
+
+"""
+This investigation is to extract what are the important features to win a football games; not including any 
+attributes related to the goals (Otherwise easy and pointless). 
+What came out after building a model based on games from 3 leagues (liga, ligue1 and pr league) during 4 seasons is :
+Around 65 % accuracy and important mainly important features are : Big chance created, clearances and crosses.  
+"""
 
 
 def interpret_prediction(array):
