@@ -229,5 +229,6 @@ def _compute_point(row):
 def score_and_points(df: pd.DataFrame):
     df['score'] = (df.h_goals+df.a_own_goals).astype(str) + '-' + (df.a_goals+df.h_own_goals).astype(str)
     df = df.apply(lambda row: _compute_point(row), axis=1)
+    breakpoint()
 
     return df

@@ -33,16 +33,17 @@ def get_files(files_dir: List[str]):
     return files
 
 
-def players_2sql(leagues: List[str], seasons: List[str]):
+def players_2sql(leagues: List[str], seasons: List[str], db: str = '../rotowire/database/GamesInfo.db'):
     """
     From all the csv of seasons and leagues, will concat into one sql database.
     Moreover, the attributes names and the different teams are made more meaningful. And attributes league,
     season, week, file are add to make sql queries easier.
     :param leagues: List[str]. All the desired league.
     :param seasons: List. All the desired season.
+    :param db: str. Path to the database containing the games.
     :return: Export the sql database PlayersInfo.db in rotowire/database.
     """
-    conn = sqlite3.connect('rotowire/database/PlayersInfo.db')
+    conn = sqlite3.connect(db)
 
     for league in leagues:
         for season in seasons:
@@ -111,7 +112,7 @@ def _get_game(df_team, week, i):
     return game
 
 
-def compute_games(league: str, season: str) -> pd.DataFrame:
+def compute_games(league: str, season: str, db: str = '../rotowire/database/GamesInfo.db',) -> pd.DataFrame:
     """
     This methods goes from a directory to a csv files that will be export.
     The directory should contains different stats per players among one season and as much csv as week played.
@@ -123,22 +124,26 @@ def compute_games(league: str, season: str) -> pd.DataFrame:
 
     :param league: str. League names ('ligue1', 'bundesliga', 'premiere_league' ...).
     :param season: str. Wanted season ('1718', '1920' ...).
+    :param db: str. Path to the database containing the games.
     :return: pd.Dataframe. Dataframe with all the df_games for one season.
     """
     from utils.fix_postponed import fix_postponed
     from utils.enrichment import score_and_points
     logger.info(f'Computing games for league : {league} and season : {season}')
 
-    conn = sqlite3.connect('rotowire/database/PlayersInfo.db')
+    conn = sqlite3.connect(db)
     data = pd.read_sql_query(f'SELECT * FROM {league}_{season}', con=conn)
 
     def _to_name(week):
         i = week.file.values[0]
 
-        df_games = week.groupby(['team', 'opponent']).apply(_get_game, week, i). \
-            reset_index(drop=True). \
-            drop_duplicates(). \
-            reset_index(drop=True)
+        try:
+            df_games = week.groupby(['team', 'opponent']).apply(_get_game, week, i). \
+                reset_index(drop=True). \
+                drop_duplicates(). \
+                reset_index(drop=True)
+        except KeyError:
+            breakpoint()
 
         df_games['week'] = [i] * len(df_games)
 
@@ -157,7 +162,7 @@ def compute_games(league: str, season: str) -> pd.DataFrame:
     return games
 
 
-def enrich_players(league: str, season: str, games: pd.DataFrame) -> pd.DataFrame:
+def enrich_players(league: str, season: str, games: pd.DataFrame, db: str = '../rotowire/database/GamesInfo.db',) -> pd.DataFrame:
     """
     This methods goes from a directory to a csv files that will be export.
     The directory should contains different stats per players among one season and as much csv as week played.
@@ -170,12 +175,13 @@ def enrich_players(league: str, season: str, games: pd.DataFrame) -> pd.DataFram
     :param league: str. League names ('ligue1', 'bundesliga', 'premiere_league' ...).
     :param season: str. Season where the data is from in order to add it as an attribute.
     :param games: pd.Dataframe. Dataframe compute by compute_games for same league and season.
+    :param db: str. Path to the database containing the games.
     :return: pd.Dataframe. Dataframe containing all the row of players with new attributes.
     """
     from utils.enrichment import add_games_id_for_players, players_new_attr, players_id
     logger.info(f'Running enrich_players for league : {league} and season : {season}')
 
-    conn = sqlite3.connect('rotowire/database/PlayersInfo.db')
+    conn = sqlite3.connect(db)
     players = pd.read_sql_query(f'SELECT * FROM {league}_{season}', con=conn)
 
     players = players.groupby(['team', 'opponent', 'home_away']).apply(add_games_id_for_players, games)
@@ -228,24 +234,22 @@ def summarise_players(players: pd.DataFrame) -> pd.DataFrame:
 
 def _home_summary(df):
     from utils.constants import H_GAME_ORIGINAL
-    from utils.enrichment import players_new_attr
 
     df_original = df.loc[:, H_GAME_ORIGINAL]
     df_original.rename(columns={s: '_'.join(s.split('_')[1:]) for s in df_original.keys()}, inplace=True)
     df_original = df_original.sum()
-    # df_original = players_new_attr(df_original)
+    df_original['nb_games'] = len(df)
 
     return df_original
 
 
 def _away_summary(df):
     from utils.constants import A_GAME_ORIGINAL
-    from utils.enrichment import players_new_attr
 
     df_original = df.loc[:, A_GAME_ORIGINAL]
     df_original.rename(columns={s: '_'.join(s.split('_')[1:]) for s in df_original.keys()}, inplace=True)
     df_original = df_original.sum()
-    # df_original = players_new_attr(df_original)
+    df_original['nb_games'] = len(df)
 
     return df_original
 
@@ -260,7 +264,7 @@ def _all_summary(df):
     return df
 
 
-def summarise_teams(games: pd.DataFrame, league: str, season: str,) -> pd.DataFrame:
+def summarise_teams(games: pd.DataFrame, league: str, season: str, nb_games: bool = False) -> pd.DataFrame:
     home = games.groupby('home').apply(_home_summary)
     away = games.groupby('away').apply(_away_summary)
 
@@ -269,7 +273,10 @@ def summarise_teams(games: pd.DataFrame, league: str, season: str,) -> pd.DataFr
     teams = teams.groupby(by='index').apply(_all_summary)
     teams['league'] = [league] * len(teams)
     teams['season'] = [season] * len(teams)
-    teams = teams.reindex(columns=TEAMS_ATTRIB)
+    if nb_games:
+        teams = teams.reindex(columns=TEAMS_ATTRIB + ['nb_games'])
+    else:
+        teams = teams.reindex(columns=TEAMS_ATTRIB)
     teams.sort_values(by='points', ascending=False, inplace=True)
     teams.reset_index(inplace=True)
     teams.rename(columns={'index': 'team'}, inplace=True)
@@ -277,15 +284,16 @@ def summarise_teams(games: pd.DataFrame, league: str, season: str,) -> pd.DataFr
     return teams
 
 
-def games_2sql(leagues: List[str], seasons: List[str]):
+def games_2sql(leagues: List[str], seasons: List[str], db: str = '../rotowire/database/GamesInfo.db',):
     """
     From all the csv of seasons and leagues, will computes the games and then concat it into one sql database.
     :param leagues: List[str]. All the desired league.
     :param seasons: List. All the desired season.
+    :param db: str. Path to the database containing the games.
     :return: Export the sql database GamesInfo.db in rotowire/database.
     """
 
-    conn = sqlite3.connect('rotowire/database/GamesInfo.db')
+    conn = sqlite3.connect(db)
     c = conn.cursor()
 
     for league in leagues:
@@ -309,6 +317,7 @@ def excel_export(leagues: List[str], seasons: List[str]) -> None:
 
             games = compute_games(league, season)
             summary_games = summarise_teams(games, league, season)
+            breakpoint()
             players = enrich_players(league, season, games)
             summary_players = summarise_players(players)
 
@@ -331,7 +340,7 @@ def excel_export(leagues: List[str], seasons: List[str]) -> None:
 
 
 # players_2sql(['liga'], ['1617', '1718', '1819', '1920'])
-# games_2sql(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
+# games_2sql(['ligue1', 'prleague', 'liga'], ['1617', '1718', '1819', '1920'])
 
 # excel_export(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
-excel_export(['liga'], ['1617'])
+# excel_export(['liga'], ['1920'])
