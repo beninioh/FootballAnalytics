@@ -47,7 +47,7 @@ def players_2sql(leagues: List[str], seasons: List[str], db: str = '../rotowire/
 
     for league in leagues:
         for season in seasons:
-            files_dir = glob.glob(f'rotowire/{league}/players/{season}/*.csv')
+            files_dir = glob.glob(f'../rotowire/{league}/players/{season}/*.csv')
             files = get_files(files_dir)
 
             season_league = []
@@ -56,6 +56,8 @@ def players_2sql(leagues: List[str], seasons: List[str], db: str = '../rotowire/
                 try:
                     csv['team'] = csv.team.apply(lambda x: TEAMS[league][x])
                 except KeyError:
+                    logger.info(f"The following team's name must be add to TEAM[{league}] : "
+                                f"{set(csv.team.unique()) - set(TEAMS[league].keys())}")
                     breakpoint()
                 csv['opponent'] = csv.opponent.apply(lambda x: TEAMS[league][x])
 
@@ -344,3 +346,5 @@ def excel_export(leagues: List[str], seasons: List[str]) -> None:
 
 # excel_export(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
 # excel_export(['liga'], ['1920'])
+
+compute_games('seria', '1617')
