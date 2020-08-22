@@ -72,30 +72,15 @@ TEAM_CLUSTER2 = ['goals', 'goals_inside_box', '%_goals_inside', 'goals_outside_b
                  'free_kick_shots_on_goal', 'penalty_kicks_conceded', 'penalties_faced', 'penalty_saves', 'corners',
                  'corner_crosses', 'corners_won']
 
-TEAM_CLUSTER3 = ['goals', 'goals_inside_box', 'goals_outside_box',
-                 'free_kick_goals', 'shots', 'shots_on_goal',
-                 'shots_inside_box',
-                 'shots_on_goal_inside_box', 'shots_outside_box',
-                 'shots_on_goal_outside_box',
-                 'blocks', 'assists', 'secondary_assists',
-                 'assists_from_open_play', 'assists_from_set_play', 'assist_penalties_won',
-                 'chances_created', 'big_chances_created',
-                 'chances_created_from_open_play',
-                 'chances_created_from_set_play', '%_chances_set_play', 'big_chance_missed', '%_big_chances_missed',
-                 'big_chance_scored', '%_big_chances_scored', 'touches', 'touches_in_box', '%_touches_in_box',
-                 'attempted_passes', 'passes', '%_passes_attempted', 'accurate_long_balls', '%_passes_long_balls',
-                 'accurate_through_balls', '%_passes_through_balls', 'crosses', 'accurate_crosses',
-                 '%_crosses_accurate', 'accurate_crosses_open_play', 'attempted_dribbles', '%_dribbles_touches',
-                 'dribbles', '%_attempted_dribbles_dribbles', 'dispossessed', '%_touches_dispossessed', 'aerials_won',
+TEAM_CLUSTER3 = ['blocks', 'chances_created_from_open_play', 'chances_created_from_set_play', 'touches',
+                 'touches_in_box', 'attempted_passes', 'passes',
+                 'accurate_long_balls', 'accurate_through_balls', 'crosses', 'accurate_crosses',
+                 'accurate_crosses_open_play', 'attempted_dribbles', 'dribbles', 'dispossessed', 'aerials_won',
                  'duels_won', 'ball_recoveries', 'interceptions', 'tackles', 'tackles_won', 'last_man_tackle',
-                 'errors_lead_to_goal', 'errors_lead_to_shot', 'assist_own_goals', 'own_goals', 'clearances',
-                 'effective_clearances', 'fouls_committed', 'fouls_suffered', 'yellow_cards', '%_fouls_yellow_cards',
-                 'yellow/red_cards', 'red_cards', 'goals_conceded', 'clean_sheets', 'saves',
-                 'saves_from_shots_inside_box', 'saves_from_shots_outside_box', 'accurate_keeper_sweeper', 'punches',
-                 'total_offside', 'penalty_kicks_taken', 'penalty_kick_goals', 'penalty_kick_misses',
-                 'penalty_kicks_saved', 'free_kick_crosses', 'free_kick_accurate_crosses', 'free_kick_shots',
-                 'free_kick_shots_on_goal', 'penalty_kicks_conceded', 'penalties_faced', 'penalty_saves', 'corners',
-                 'corner_crosses', 'corners_won']
+                 'errors_lead_to_goal', 'errors_lead_to_shot', 'clearances', 'effective_clearances', 'fouls_committed',
+                 'fouls_suffered', 'yellow_cards', 'red_cards', 'clean_sheets', 'saves', 'accurate_keeper_sweeper',
+                 'punches', 'total_offside', 'penalty_kicks_taken', 'free_kick_crosses', 'free_kick_accurate_crosses',
+                 'free_kick_shots', 'corners', 'corner_crosses', 'corners_won']
 
 
 LIGUE1_TEAMS = {'DIJ': 'Dijon', 'FCN': 'Nantes', 'ASM': 'Monaco', 'MTP': 'Montpellier', 'GUI': 'Guingamp',
@@ -106,12 +91,11 @@ LIGUE1_TEAMS = {'DIJ': 'Dijon', 'FCN': 'Nantes', 'ASM': 'Monaco', 'MTP': 'Montpe
 
 PRLEAGUE_TEAMS = {'BUR': 'Burnley', 'BOU': 'Bornemouth', 'CRY': 'Crystal_palace', 'NOR': 'Norwich', 'WHU': 'West_ham',
                   'AVL': 'Aston_villa', 'WAT': 'Watford', 'LEI': 'Leicester', 'WLV': 'Wolverhampthon',
-                  'TOT': 'Tottenham',
-                  'NEW': 'Newcastle', 'MUN': 'Man_united', 'LIV': 'Liverpool', 'ARS': 'Arsenal', 'MCI': 'Man_city',
-                  'CHE': 'Chelsea', 'SHU': 'Sheffield_uni', 'SOU': ' Southampton', 'EVE': 'Everton', 'BHA': 'Brighton',
-                  'CAR': 'Cardiff', 'HUD': 'Huddersfield', 'FUL': 'Fullham', 'WBA': 'West_bromwich',
-                  'STO': 'Stoke_city',
-                  'SWA': 'Swansea', 'MID': 'Middlesbrough', 'SUN': 'Sunderland', 'HUL': 'Hull_City'}
+                  'TOT': 'Tottenham', 'NEW': 'Newcastle', 'MUN': 'Man_united', 'LIV': 'Liverpool', 'ARS': 'Arsenal',
+                  'MCI': 'Man_city', 'CHE': 'Chelsea', 'SHU': 'Sheffield_uni', 'SOU': ' Southampton', 'EVE': 'Everton',
+                  'BHA': 'Brighton', 'CAR': 'Cardiff', 'HUD': 'Huddersfield', 'FUL': 'Fullham', 'WBA': 'West_bromwich',
+                  'STO': 'Stoke_city', 'SWA': 'Swansea', 'MID': 'Middlesbrough', 'SUN': 'Sunderland',
+                  'HUL': 'Hull_City'}
 
 LIGA_TEAMS = {'RMD': 'Real_madrid', 'OSA': 'Osasuna', 'RSO': 'Real_Sociedad', 'CEL': 'Celta_vigo', 'GRA': 'Granada',
               'ESP': 'Espanyol', 'DEP': 'Deportivo_Coruna', 'VAL': 'Valencia', 'ATH': 'Athletico_madrid',
@@ -120,7 +104,15 @@ LIGA_TEAMS = {'RMD': 'Real_madrid', 'OSA': 'Osasuna', 'RSO': 'Real_Sociedad', 'C
               'BET': 'Betis', 'LEV': 'Levante', 'GET': 'Getafe', 'GIR': 'Girone', 'RAY': 'Rayo_vallecano',
               'REV': 'Valladolid', 'MRC': 'Mallorca', 'HUE': 'Huesca'}
 
-TEAMS = {'ligue1': LIGUE1_TEAMS, 'prleague': PRLEAGUE_TEAMS, 'liga': LIGA_TEAMS}
+SERIA_TEAM = {'UDN': 'Udinese', 'NAP': 'Napoli', 'TOR': 'Torino', 'CAG': 'Cagliari', 'JUV': 'Juventus',
+              'GEN': 'Genoa', 'MIL': 'Milan_ac', 'CRO': 'Crotone', 'FIO': 'Fiorentina', 'INT': 'Inter',
+              'CHI': 'Chievo', 'LAZ': 'Lazio', 'SMP': 'Samporia', 'SAS': 'Sassuolo', 'EMP': 'Empoli',
+              'ATA': 'Atalanta', 'ROM': 'Roma', 'BGN': 'Bologna', 'PES': 'Pescara', 'PAL': 'Palermo'}
+
+BUDESLIGA_TEAM = {}
+
+TEAMS = {'ligue1': LIGUE1_TEAMS, 'prleague': PRLEAGUE_TEAMS, 'liga': LIGA_TEAMS, 'seria': SERIA_TEAM,
+         'budesliga': BUDESLIGA_TEAM}
 
 GAMES_ATTRIB = ['id_home', 'id_away', 'nb_home', 'nb_away', 'league', 'season', 'week', 'file', 'home', 'away',
 
