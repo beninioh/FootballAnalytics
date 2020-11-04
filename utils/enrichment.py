@@ -72,6 +72,43 @@ def games_new_attr(df: pd.DataFrame):
 
 
 def players_new_attr(df: pd.DataFrame):
+    df['%_goals_inside'] = df.goals_inside_box / df.goals if df.goals != 0 else 0
+    df['%_goals_outside'] = df.goals_outside_box / df.goals if df.goals != 0 else 0
+    df['%_goals_free_kick'] = df.free_kick_goals / df.goals if df.goals != 0 else 0
+    df['%_goals_shot'] = df.shots / df.goals if df.goals != 0 else 0
+    df['%_goals_shot_on'] = df.shots_on_goal / df.goals if df.goals != 0 else 0
+    df['%_shot_shot_on'] = df.shots_on_goal / df.shots if df.shots != 0 else 0
+    df['%_goals_shot_inside'] = df.goals_inside_box / df.goals if df.goals != 0 else 0
+    df['%_shot_shot_inside'] = df.goals_inside_box / df.shots if df.shots != 0 else 0
+    df['%_goals_shot_on_inside'] = df.shots_on_goal_inside_box / df.goals if df.goals != 0 else 0
+    df['%_shot_on_shot_on_inside'] = df.shots_on_goal_inside_box / df.shots_on_goal if df.shots_on_goal != 0 else 0
+    df['%_shot_outside_shot'] = df.shots / df.shots_outside_box if df.shots_outside_box != 0 else 0
+    df['%_shot_shot_outside'] = df.goals_outside_box / df.shots if df.shots != 0 else 0
+    df['%_shot_on_outside_shot_on'] = df.shots_on_goal / df.shots_on_goal_outside_box if df.shots_on_goal_outside_box != 0 else 0
+    df['%_shot_shot_on_outside'] = df.shots_on_goal_outside_box / df.shots if df.shots != 0 else 0
+    df['%_assists_open_play'] = df.assists_from_open_play / df.assists if df.assists != 0 else 0
+    df['%_assists_set_play'] = df.assists_from_set_play / df.assists if df.assists != 0 else 0
+    df['%_assist_chances'] = df.chances_created / df.assists if df.assists != 0 else 0
+    df['%_big_chances_chances'] = df.chances_created / df.big_chances_created if df.big_chances_created != 0 else 0
+    df['%_chances_open_play'] = df.chances_created_from_open_play / df.chances_created if df.chances_created != 0 else 0
+    df['%_chances_set_play'] = df.chances_created_from_set_play / df.chances_created if df.chances_created != 0 else 0
+    df['%_big_chances_missed'] = df.big_chance_missed / df.big_chances_created if df.big_chances_created != 0 else 0
+    df['%_big_chances_scored'] = df.big_chance_scored / df.big_chances_created if df.big_chances_created != 0 else 0
+    df['%_touches_in_box'] = df.touches_in_box / df.touches if df.touches != 0 else 0
+    df['%_passes_attempted'] = df.attempted_passes / df.passes if df.passes != 0 else 0
+    df['%_passes_long_balls'] = df.accurate_long_balls / df.passes if df.passes != 0 else 0
+    df['%_passes_through_balls'] = df.accurate_through_balls / df.passes if df.passes != 0 else 0
+    df['%_crosses_accurate'] = df.accurate_crosses / df.crosses if df.crosses != 0 else 0
+    df['%_attempted_dribbles_dribbles'] = df.dribbles / df.attempted_dribbles if df.attempted_dribbles != 0 else 0
+    df['%_dribbles_touches'] = df.attempted_dribbles / df.touches if df.touches != 0 else 0
+    df['%_touches_dispossessed'] = df.dispossessed / df.touches if df.touches != 0 else 0
+    df['%_fouls_yellow_cards'] = df.yellow_cards / df.fouls_committed if df.fouls_committed != 0 else 0
+
+    df.replace([np.inf, -np.inf, np.nan], 0, inplace=True)
+    return df
+
+
+def players_new_attr2(df: pd.DataFrame):
     df['%_goals_inside'] = df.goals_inside_box / df.goals
     df['%_goals_outside'] = df.goals_outside_box / df.goals
     df['%_goals_free_kick'] = df.free_kick_goals / df.goals
@@ -229,6 +266,5 @@ def _compute_point(row):
 def score_and_points(df: pd.DataFrame):
     df['score'] = (df.h_goals+df.a_own_goals).astype(str) + '-' + (df.a_goals+df.h_own_goals).astype(str)
     df = df.apply(lambda row: _compute_point(row), axis=1)
-    breakpoint()
 
     return df

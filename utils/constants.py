@@ -87,7 +87,8 @@ LIGUE1_TEAMS = {'DIJ': 'Dijon', 'FCN': 'Nantes', 'ASM': 'Monaco', 'MTP': 'Montpe
                 'ETI': 'St_etienne', 'TFC': 'Toulouse', 'PSG': 'Paris', 'SMC': 'Caen', 'FCM': 'Metz',
                 'STR': 'Strasbourg', 'OL': 'Lyon', 'NO': 'Nimes', 'NIC': 'Nice', 'GDB': 'Bordeaux', 'SCO': 'Angers',
                 'LIL': 'Lille', 'BRE': 'Brest', 'ASC': 'Amiens', 'OM': 'Marseille', 'REN': 'Rennes', 'SDR': 'Reims',
-                'TRO': 'Troyes', 'BST': 'Bastia', 'FCL': 'Lorient', 'NAN': 'Nancy'}
+                'TRO': 'Troyes', 'BST': 'Bastia', 'FCL': 'Lorient', 'NAN': 'Nantes', 'RCL': 'Lens', 'NIM': 'Nimes',
+                'SR': 'Reims', 'GIR': 'Bordeaux', 'MON': 'Montpellier', 'ASS': 'St_etienne', 'MET': 'Metz'}
 
 PRLEAGUE_TEAMS = {'BUR': 'Burnley', 'BOU': 'Bornemouth', 'CRY': 'Crystal_palace', 'NOR': 'Norwich', 'WHU': 'West_ham',
                   'AVL': 'Aston_villa', 'WAT': 'Watford', 'LEI': 'Leicester', 'WLV': 'Wolverhampthon',
@@ -107,7 +108,9 @@ LIGA_TEAMS = {'RMD': 'Real_madrid', 'OSA': 'Osasuna', 'RSO': 'Real_Sociedad', 'C
 SERIA_TEAM = {'UDN': 'Udinese', 'NAP': 'Napoli', 'TOR': 'Torino', 'CAG': 'Cagliari', 'JUV': 'Juventus',
               'GEN': 'Genoa', 'MIL': 'Milan_ac', 'CRO': 'Crotone', 'FIO': 'Fiorentina', 'INT': 'Inter',
               'CHI': 'Chievo', 'LAZ': 'Lazio', 'SMP': 'Samporia', 'SAS': 'Sassuolo', 'EMP': 'Empoli',
-              'ATA': 'Atalanta', 'ROM': 'Roma', 'BGN': 'Bologna', 'PES': 'Pescara', 'PAL': 'Palermo'}
+              'ATA': 'Atalanta', 'ROM': 'Roma', 'BGN': 'Bologna', 'PES': 'Pescara', 'PAL': 'Palermo',
+              'SPL': 'Spal', 'VNA': 'Hellas_veronna', 'BEN': 'Benevento', 'PAR': 'Parma', 'FRO': 'Frosinone',
+              'LEC': 'Lecce', 'BRS': 'Brescia'}
 
 BUDESLIGA_TEAM = {}
 
@@ -234,6 +237,10 @@ TEAMS_ATTRIB = ['points', 'league', 'season',
                 'penalty_kicks_saved', 'free_kick_crosses', 'free_kick_accurate_crosses',
                 'free_kick_shots', 'free_kick_shots_on_goal', 'penalty_kicks_conceded', 'penalties_faced',
                 'penalty_saves', 'corners', 'corner_crosses', 'corners_won']
+
+DEF_ATTRIB = ['goals', 'shots', 'blocks', 'chances_created', 'touches_in_box', 'attempted_passes',
+              'passes', 'accurate_through_balls', 'crosses', 'accurate_crosses', 'fouls_suffered', 'corners',
+              'corner_crosses', 'corners_won']
 
 SUMMARY_ATTRIB = ['id_player', 'league', 'season', 'team', 'player_name', 'position', 'minutes', 'played_games',
 

@@ -1,4 +1,4 @@
-from utils.constants import TEAM_CLUSTER2
+from utils.constants import TEAM_CLUSTER3
 from utils.build_database import *
 from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
@@ -7,6 +7,7 @@ from typing import List
 import seaborn as sns
 import pandas as pd
 import numpy as np
+import umap
 
 
 def get_team(league: str, season: str, db: str = '../rotowire/database/GamesInfo.db'):
@@ -40,13 +41,13 @@ def get_teams(leagues: List[str], seasons: List[str], db: str = '../rotowire/dat
     """
     teams = pd.concat([get_team(league, season, db) for league in leagues for season in seasons],
                       ignore_index=True, sort=False)
-    teams_names = teams.team.values
-    teams = teams.replace([np.inf, -np.inf, np.nan], 0).loc[:, TEAM_CLUSTER2].values
+    team_infos = teams.loc[:, ['team', 'league', 'season']]
+    teams = teams.replace([np.inf, -np.inf, np.nan], 0).loc[:, [x for x in TEAM_CLUSTER3 if '%' not in x]].values
 
     if normalized:
         teams = normalized_teams(teams)
 
-    return teams, teams_names
+    return teams, team_infos
 
 
 def normalized_teams(teams: List[np.ndarray]):
@@ -55,7 +56,7 @@ def normalized_teams(teams: List[np.ndarray]):
 
     teams_normed = []
     for team in teams:
-        team_normed = [(team[i] - teams_min[i]) / (teams_max[i] - teams_min[i]) for i in range(len(teams[0]))]
+        team_normed = [(team[i] - teams_min[i]) / (teams_max[i] - teams_min[i]) * 100 for i in range(len(teams[0]))]
         teams_normed.append(team_normed)
 
     return np.array(teams_normed)
@@ -74,8 +75,8 @@ def get_cluster_tables(leagues: List[str], seasons: List[str], cluster: pd.DataF
     against another teams.
     The table size corresponds to the number of cluster. Ex : Team from cluster 1 playing against team from cluster 3.
     From the 3 tables, we can see the proportion of a win, a draw or a lose.
-    :param leagues: List[str]. All the desired league.
-    :param seasons: List. All the desired season.
+    :param leagues: List[str]. All the desired leagues.
+    :param seasons: List. All the desired seasons.
     :param cluster: pd.DataFrame. Thanks to a pre-computed clustering, this would tell us which team is in which cluster.
     :param db: str. Path to the database containing the games.
     :return: List[pd.DataFrame]. Three data frame representing the likelihood of win/draw/lose.
@@ -106,7 +107,16 @@ def get_cluster_tables(leagues: List[str], seasons: List[str], cluster: pd.DataF
         for j in range(n):
             scores = list(map(lambda x: extract_score(x, i, j), cluster_infos))
             n_scores = len([x for x in scores if x is not None])
-            wins, draws, loses = scores.count(3) / n_scores, scores.count(1) / n_scores, scores.count(0) / n_scores
+
+            # try:
+            #     wins, draws, loses = scores.count(3) / n_scores, scores.count(1) / n_scores, scores.count(0) / n_scores
+            # except ZeroDivisionError:
+            #     breakpoint()
+
+            if n_scores == 0:
+                wins, draws, loses = np.nan, np.nan, np.nan
+            else:
+                wins, draws, loses = scores.count(3) / n_scores, scores.count(1) / n_scores, scores.count(0) / n_scores
 
             pred_w.append(wins)
             pred_d.append(draws)
@@ -123,29 +133,94 @@ def get_cluster_tables(leagues: List[str], seasons: List[str], cluster: pd.DataF
     return df_w, df_d, df_l
 
 
-teams, _ = get_teams(['ligue1', 'prleague', 'liga'], ['1617', '1718', '1819', '1920'])
+def get_cotes(leagues: List[str], seasons: List[str], tnse_preplex: int, n_clusters: int,
+              plot: bool = True, export: bool = False, try_tnse: List = None, try_kmean: List = None):
+    """
+    This method goes from the teams stats of the desired leagues and seasons, use a dimension reduction (t-nse) and
+    a clustering algorithm (kmean) in order to group the team that play in a similar way. Then, for every cluster,
+    will compute the likelyhood of winning/drawing/loosing a game against every other cluster.
+    :param leagues: List[str]. All the desired leagues.
+    :param seasons: List. All the desired seasons.
+    :param tnse_preplex: int. Perplexity for the t-nse.
+    :param n_clusters: int. Amount of cluster to consider using the k-mean algorithm.
+    :param plot: bool. True if you want to visualize the t-nse and the different clusters.
+    :param try_tnse: List. Provide a list of perplexity to try with t-nse.
+    :param try_kmean: List. Provide a list of potential number of clusters to try with t-nse.
+    :param export: bool. True if you want to export the dataframe into 3 different csv files.
+    :return: List[pd.DataFrame]. Three data frame representing the likelihood of win/draw/lose.
+    """
+    # TODO: change methods name with an english friendly name
+    teams, team_infos = get_teams(leagues, seasons)
 
-for perplex in range(5, 150, 5):
-    tsne = TSNE(perplexity=perplex)
+    if try_tnse:
+        for perplex in try_tnse:
+            tsne = TSNE(perplexity=perplex)
+            X_embedded = tsne.fit_transform(teams)
+            sns.scatterplot(X_embedded[:, 0], X_embedded[:, 1])
+            plt.title(f'{perplex}')
+            plt.show()
+        return
+
+    tsne = TSNE(perplexity=tnse_preplex)
+    X_embedded = tsne.fit_transform(teams)
+
+    if try_kmean:
+        for nb_clusters in try_kmean:
+            kmeans = KMeans(n_clusters=nb_clusters, random_state=0).fit(X_embedded)
+            sns.scatterplot(X_embedded[:, 0], X_embedded[:, 1], hue=kmeans.labels_,
+                            palette=sns.color_palette("husl", len(set(kmeans.labels_))))
+            # sns.scatterplot(X_embedded[:, 0], X_embedded[:, 1])
+            plt.title(f'{nb_clusters}')
+            plt.show()
+        return
+
+    kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(X_embedded)
+
+    if plot:
+        sns.scatterplot(X_embedded[:, 0], X_embedded[:, 1], hue=kmeans.labels_,
+                        palette=sns.color_palette("husl", len(set(kmeans.labels_))))
+        plt.title(f'Last team clustering ({len(leagues)} leagues on {len(seasons)} seasons).')
+        plt.show()
+
+    clustering = pd.concat([team_infos, pd.DataFrame({'cluster': kmeans.labels_})], axis=1, sort=False)
+    t_win, t_draw, t_lose = get_cluster_tables(['ligue1', 'prleague', 'liga'], ['1617', '1718', '1819'], clustering)
+
+    if export:
+        clustering.to_csv('clustering.csv')
+        t_win.to_csv('wins.csv')
+        t_draw.to_csv('draws.csv')
+        t_lose.to_csv('loses.csv')
+
+    return clustering, t_win, t_draw, t_lose
+
+
+teams, team_infos = get_teams(['ligue1', 'liga', 'prleague'], ['1617', '1718', '1819', '1920'])
+import random
+# perplex = list(range(20, 90, 5))
+# early_exaggeration = list(range(6, 20, 2))
+# learning_rate = list(range(160, 240, 10))
+
+for p in range(15):
+    p2 = random.randrange(5, 15)
+    e = random.randrange(6, 20, 2)
+    l = random.randrange(130, 270, 10)
+    n_it = random.randrange(1000, 6000, 1000)
+    angle = random.choice([0.2+i*0.1 for i in range(7)])
+
+    tsne = TSNE(perplexity=p2, early_exaggeration=e, learning_rate=l, n_iter=n_it, angle=angle)
     X_embedded = tsne.fit_transform(teams)
     sns.scatterplot(X_embedded[:, 0], X_embedded[:, 1])
-    plt.title(f'{perplex}')
+    plt.title(f'{p}, {e}, {l}, {n_it}, {angle}')
     plt.show()
 
-# for nb_clusters in range(4, 10):
-#     kmeans = KMeans(n_clusters=nb_clusters, random_state=0).fit(X_embedded)
-#
-#     sns.scatterplot(X_embedded[:, 0], X_embedded[:, 1], hue=kmeans.labels_,
-#                     palette=sns.color_palette("husl", len(set(kmeans.labels_))))
-#     # sns.scatterplot(X_embedded[:, 0], X_embedded[:, 1])
-#     plt.title(f'{nb_clusters}')
-#     plt.show()
+# tsne = TSNE(perplexity=perplex)
+# X_embedded = tsne.fit_transform(teams)
+# sns.scatterplot(X_embedded[:, 0], X_embedded[:, 1])
+# plt.title(f'{perplex}')
+# plt.show()
 
-breakpoint()
-
-
-cluster2 = pd.read_excel('clustering.xlsx')
-t_win, t_draw, t_lose = get_cluster_tables(['ligue1', 'prleague', 'liga'], ['1617', '1718', '1819'], cluster2)
+# c, win, draw, lose = get_cotes(['ligue1', 'liga', 'prleague'], ['1617', '1718', '1819', '1920'],
+#                                tnse_preplex=28, n_clusters=8, plot=True, export=False)
 
 breakpoint()
 

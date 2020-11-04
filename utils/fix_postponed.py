@@ -81,6 +81,12 @@ def fix_postponed(df, league: str, season: str):
         df = fix(df, 'St_etienne', 'Paris', 37)
         df = fix(df, 'Metz', 'Toulouse', 37)
 
+    elif league == 'ligue1' and season == '2021':
+        df = fix(df, 'Montpellier', 'Lyon', 1)
+        df = fix(df, 'Paris', 'Metz', 1)
+        df = fix(df, 'Marseille', 'St_etienne', 1)
+        df = fix(df, 'Lens', 'Paris', 2)
+
     elif league == 'prleague' and season == '1617':
         df = fix(df, 'Man_city', 'Man_united', 26)
         df = fix(df, 'Southampton', 'Arsenal', 26)

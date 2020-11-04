@@ -5,6 +5,7 @@ from typing import List
 import pandas as pd
 import sqlite3
 import glob
+import numpy as np
 
 """
 From the data coming from rotowire, one csv per "week" per league per season, where a row corresponds to how a player
@@ -44,6 +45,7 @@ def players_2sql(leagues: List[str], seasons: List[str], db: str = '../rotowire/
     :return: Export the sql database PlayersInfo.db in rotowire/database.
     """
     conn = sqlite3.connect(db)
+    logger.info(f'Adding plauers info to database for leagues : {leagues} and seasons : {seasons}')
 
     for league in leagues:
         for season in seasons:
@@ -164,6 +166,36 @@ def compute_games(league: str, season: str, db: str = '../rotowire/database/Game
     return games
 
 
+def add_opponent(df: pd.DataFrame):
+    """
+
+    :param df:
+    :return:
+    """
+    from utils.constants import DEF_ATTRIB
+
+    df.loc[:, 'enough_play'] = df.minutes > 75
+
+    opps = []
+    for i in range(len(df)):
+        if not df.iloc[i].enough_play:
+            opps.append(pd.Series({'opp_'+attr: 0 for attr in DEF_ATTRIB}))
+            continue
+        if df.iloc[i].position not in ['DR', 'DC', 'DL', 'DMC']:
+            opps.append(pd.Series({'opp_' + attr: 0 for attr in DEF_ATTRIB}))
+            continue
+
+        df_opponent = df.query(f"week == {df.iloc[i].week} and team.str.contains('{df.iloc[i].opponent}')")
+        df_opponent = df_opponent.loc[:, DEF_ATTRIB].rename(columns={attr: 'opp_'+attr for attr in DEF_ATTRIB}).sum()
+
+        opps.append(df_opponent)
+
+    df_opps = pd.concat(opps, axis=1).transpose()
+    new_df = pd.concat([df, df_opps], axis=1, join='inner')
+
+    return new_df
+
+
 def enrich_players(league: str, season: str, games: pd.DataFrame, db: str = '../rotowire/database/GamesInfo.db',) -> pd.DataFrame:
     """
     This methods goes from a directory to a csv files that will be export.
@@ -180,16 +212,18 @@ def enrich_players(league: str, season: str, games: pd.DataFrame, db: str = '../
     :param db: str. Path to the database containing the games.
     :return: pd.Dataframe. Dataframe containing all the row of players with new attributes.
     """
-    from utils.enrichment import add_games_id_for_players, players_new_attr, players_id
+    from utils.enrichment import add_games_id_for_players, players_new_attr2, players_id
+    from utils.constants import DEF_ATTRIB
     logger.info(f'Running enrich_players for league : {league} and season : {season}')
 
     conn = sqlite3.connect(db)
     players = pd.read_sql_query(f'SELECT * FROM {league}_{season}', con=conn)
 
     players = players.groupby(['team', 'opponent', 'home_away']).apply(add_games_id_for_players, games)
-    players = players_new_attr(players)
+    players = players_new_attr2(players)
     players = players_id(players)
-    players = players.reindex(columns=PLAYERS_ATTRIB)
+    players = add_opponent(players)
+    players = players.reindex(columns=PLAYERS_ATTRIB + ['opp_' + attr for attr in DEF_ATTRIB])
     players.sort_values(['week', 'id_player'], inplace=True)
 
     return players
@@ -224,12 +258,12 @@ def summarise_players(players: pd.DataFrame) -> pd.DataFrame:
     :param players:
     :return:
     """
-    from utils.constants import PLAY_ORIGINAL, SUMMARY_ATTRIB
+    from utils.constants import PLAY_ORIGINAL, SUMMARY_ATTRIB, DEF_ATTRIB
 
-    players = players.loc[:, PLAY_ORIGINAL]
+    players = players.loc[:, PLAY_ORIGINAL + ['opp_' + attr for attr in DEF_ATTRIB]]
     players_summary = players.groupby('id_player').apply(_player_summary)
     players_summary.reset_index(inplace=True)
-    players_summary = players_summary.reindex(columns=SUMMARY_ATTRIB)
+    players_summary = players_summary.reindex(columns=SUMMARY_ATTRIB + ['opp_' + attr for attr in DEF_ATTRIB])
 
     return players_summary
 
@@ -269,6 +303,7 @@ def _all_summary(df):
 def summarise_teams(games: pd.DataFrame, league: str, season: str, nb_games: bool = False) -> pd.DataFrame:
     home = games.groupby('home').apply(_home_summary)
     away = games.groupby('away').apply(_away_summary)
+    breakpoint()
 
     teams = pd.concat([home, away], sort=False)
     teams.reset_index(inplace=True)
@@ -279,7 +314,8 @@ def summarise_teams(games: pd.DataFrame, league: str, season: str, nb_games: boo
         teams = teams.reindex(columns=TEAMS_ATTRIB + ['nb_games'])
     else:
         teams = teams.reindex(columns=TEAMS_ATTRIB)
-    teams.sort_values(by='points', ascending=False, inplace=True)
+    teams.loc[:, 'goals_diff'] = teams.goals - teams.goals_conceded
+    teams.sort_values(by=['points', 'goals_diff', 'goals'], ascending=False, inplace=True)
     teams.reset_index(inplace=True)
     teams.rename(columns={'index': 'team'}, inplace=True)
 
@@ -315,11 +351,10 @@ def excel_export(leagues: List[str], seasons: List[str]) -> None:
 
     for league in leagues:
         for season in seasons:
-            writer = pd.ExcelWriter(f'excel_files/{league}_{season}.xlsx')
+            writer = pd.ExcelWriter(f'../excel_files/{league}_{season}.xlsx')
 
             games = compute_games(league, season)
             summary_games = summarise_teams(games, league, season)
-            breakpoint()
             players = enrich_players(league, season, games)
             summary_players = summarise_players(players)
 
@@ -333,11 +368,11 @@ def excel_export(leagues: List[str], seasons: List[str]) -> None:
             except PermissionError:
                 import os
                 try:
-                    os.remove(f'excel_files/{league}_{season}.xlsx')
+                    os.remove(f'../excel_files/{league}_{season}.xlsx')
                 except PermissionError:
                     logger.error('PermissionError : please close file and press c.')
                     breakpoint()
-                    os.remove(f'excel_files/{league}_{season}.xlsx')
+                    os.remove(f'../excel_files/{league}_{season}.xlsx')
                 writer.save()
 
 
@@ -347,4 +382,10 @@ def excel_export(leagues: List[str], seasons: List[str]) -> None:
 # excel_export(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
 # excel_export(['liga'], ['1920'])
 
-compute_games('seria', '1617')
+# players_2sql(['seria'], ['1617', '1718', '1819', '1920'])
+# compute_games('seria', '1617')
+
+# players_2sql(['ligue1'], ['2021'])
+excel_export(['ligue1'], ['2021'])
+
+breakpoint()
