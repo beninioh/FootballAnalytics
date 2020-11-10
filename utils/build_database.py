@@ -23,18 +23,14 @@ Steps :
 def get_files(files_dir: List[str]):
     files = {}
     for file in files_dir:
-        try:
-            int(str(file)[-6])
-            file_nbr = int(str(file)[-6:-4])
-        except ValueError:
-            file_nbr = int(str(file)[-5:-4])
-
-        files[file_nbr] = file
+        file = file[:-4]
+        file_nbr = int(str(file).split('_')[-1])
+        files[file_nbr] = file + '.csv'
 
     return files
 
 
-def players_2sql(leagues: List[str], seasons: List[str], db: str = '../rotowire/database/GamesInfo.db'):
+def players_2sql(leagues: List[str], seasons: List[str], db: str = '../rotowire/database/PlayersInfo.db'):
     """
     From all the csv of seasons and leagues, will concat into one sql database.
     Moreover, the attributes names and the different teams are made more meaningful. And attributes league,
@@ -45,7 +41,7 @@ def players_2sql(leagues: List[str], seasons: List[str], db: str = '../rotowire/
     :return: Export the sql database PlayersInfo.db in rotowire/database.
     """
     conn = sqlite3.connect(db)
-    logger.info(f'Adding plauers info to database for leagues : {leagues} and seasons : {seasons}')
+    logger.info(f'Adding players info to database for leagues : {leagues} and seasons : {seasons}')
 
     for league in leagues:
         for season in seasons:
@@ -59,10 +55,10 @@ def players_2sql(leagues: List[str], seasons: List[str], db: str = '../rotowire/
                     csv['team'] = csv.team.apply(lambda x: TEAMS[league][x])
                 except KeyError:
                     logger.info(f"The following team's name must be add to TEAM[{league}] : "
-                                f"{set(csv.team.unique()) - set(TEAMS[league].keys())}")
+                                f"{set(csv.team.unique()) - set(TEAMS[league].keys())} (from file {i}).")
                     breakpoint()
-                csv['opponent'] = csv.opponent.apply(lambda x: TEAMS[league][x])
 
+                csv['opponent'] = csv.opponent.apply(lambda x: TEAMS[league][x])
                 csv['league'] = [league] * len(csv)
                 csv['season'] = [season] * len(csv)
                 csv['file'] = [i] * len(csv)
@@ -116,7 +112,7 @@ def _get_game(df_team, week, i):
     return game
 
 
-def compute_games(league: str, season: str, db: str = '../rotowire/database/GamesInfo.db',) -> pd.DataFrame:
+def compute_games(league: str, season: str, db: str = '../rotowire/database/PlayersInfo.db') -> pd.DataFrame:
     """
     This methods goes from a directory to a csv files that will be export.
     The directory should contains different stats per players among one season and as much csv as week played.
@@ -196,7 +192,7 @@ def add_opponent(df: pd.DataFrame):
     return new_df
 
 
-def enrich_players(league: str, season: str, games: pd.DataFrame, db: str = '../rotowire/database/GamesInfo.db',) -> pd.DataFrame:
+def enrich_players(league: str, season: str, games: pd.DataFrame, db: str = '../rotowire/database/Players.db',) -> pd.DataFrame:
     """
     This methods goes from a directory to a csv files that will be export.
     The directory should contains different stats per players among one season and as much csv as week played.
@@ -303,7 +299,6 @@ def _all_summary(df):
 def summarise_teams(games: pd.DataFrame, league: str, season: str, nb_games: bool = False) -> pd.DataFrame:
     home = games.groupby('home').apply(_home_summary)
     away = games.groupby('away').apply(_away_summary)
-    breakpoint()
 
     teams = pd.concat([home, away], sort=False)
     teams.reset_index(inplace=True)
@@ -358,6 +353,8 @@ def excel_export(leagues: List[str], seasons: List[str]) -> None:
             players = enrich_players(league, season, games)
             summary_players = summarise_players(players)
 
+            breakpoint()
+
             games.to_excel(excel_writer=writer, sheet_name=f'games_{league}_{season}', index=False)
             players.to_excel(excel_writer=writer, sheet_name=f'players_{league}_{season}', index=False)
             summary_players.to_excel(excel_writer=writer, sheet_name=f'summary_players_{league}_{season}', index=False)
@@ -376,16 +373,7 @@ def excel_export(leagues: List[str], seasons: List[str]) -> None:
                 writer.save()
 
 
-# players_2sql(['liga'], ['1617', '1718', '1819', '1920'])
 # games_2sql(['ligue1', 'prleague', 'liga'], ['1617', '1718', '1819', '1920'])
+# players_2sql(['prleague'], ['2021'])
+# excel_export(['ligue1'], ['2021'])
 
-# excel_export(['ligue1', 'prleague'], ['1617', '1718', '1819', '1920'])
-# excel_export(['liga'], ['1920'])
-
-# players_2sql(['seria'], ['1617', '1718', '1819', '1920'])
-# compute_games('seria', '1617')
-
-# players_2sql(['ligue1'], ['2021'])
-excel_export(['ligue1'], ['2021'])
-
-breakpoint()
