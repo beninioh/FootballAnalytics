@@ -96,7 +96,7 @@ PRLEAGUE_TEAMS = {'BUR': 'Burnley', 'BOU': 'Bornemouth', 'CRY': 'Crystal_palace'
                   'MCI': 'Man_city', 'CHE': 'Chelsea', 'SHU': 'Sheffield_uni', 'SOU': ' Southampton', 'EVE': 'Everton',
                   'BHA': 'Brighton', 'CAR': 'Cardiff', 'HUD': 'Huddersfield', 'FUL': 'Fullham', 'WBA': 'West_bromwich',
                   'STO': 'Stoke_city', 'SWA': 'Swansea', 'MID': 'Middlesbrough', 'SUN': 'Sunderland',
-                  'HUL': 'Hull_City'}
+                  'HUL': 'Hull_City', 'WOL': 'Wolverhampton', 'LEE': 'Leeds', 'BRN': 'Burnley'}
 
 LIGA_TEAMS = {'RMD': 'Real_madrid', 'OSA': 'Osasuna', 'RSO': 'Real_Sociedad', 'CEL': 'Celta_vigo', 'GRA': 'Granada',
               'ESP': 'Espanyol', 'DEP': 'Deportivo_Coruna', 'VAL': 'Valencia', 'ATH': 'Athletico_madrid',

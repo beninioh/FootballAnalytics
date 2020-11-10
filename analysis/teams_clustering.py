@@ -194,33 +194,5 @@ def get_cotes(leagues: List[str], seasons: List[str], tnse_preplex: int, n_clust
     return clustering, t_win, t_draw, t_lose
 
 
-teams, team_infos = get_teams(['ligue1', 'liga', 'prleague'], ['1617', '1718', '1819', '1920'])
-import random
-# perplex = list(range(20, 90, 5))
-# early_exaggeration = list(range(6, 20, 2))
-# learning_rate = list(range(160, 240, 10))
 
-for p in range(15):
-    p2 = random.randrange(5, 15)
-    e = random.randrange(6, 20, 2)
-    l = random.randrange(130, 270, 10)
-    n_it = random.randrange(1000, 6000, 1000)
-    angle = random.choice([0.2+i*0.1 for i in range(7)])
-
-    tsne = TSNE(perplexity=p2, early_exaggeration=e, learning_rate=l, n_iter=n_it, angle=angle)
-    X_embedded = tsne.fit_transform(teams)
-    sns.scatterplot(X_embedded[:, 0], X_embedded[:, 1])
-    plt.title(f'{p}, {e}, {l}, {n_it}, {angle}')
-    plt.show()
-
-# tsne = TSNE(perplexity=perplex)
-# X_embedded = tsne.fit_transform(teams)
-# sns.scatterplot(X_embedded[:, 0], X_embedded[:, 1])
-# plt.title(f'{perplex}')
-# plt.show()
-
-# c, win, draw, lose = get_cotes(['ligue1', 'liga', 'prleague'], ['1617', '1718', '1819', '1920'],
-#                                tnse_preplex=28, n_clusters=8, plot=True, export=False)
-
-breakpoint()
 
